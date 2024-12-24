@@ -1,0 +1,11 @@
+# Ignore the virtual environment
+.venv/
+
+# Ignore the database file (in the outer leave_management folder)
+leave_management/db.sqlite3
+
+# Ignore Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.log
