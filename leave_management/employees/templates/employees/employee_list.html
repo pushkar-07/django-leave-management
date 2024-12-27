@@ -7,11 +7,34 @@
 </head>
 <body>
     <h1>Employee List:</h1>
-    <p>Display employee records here.</p>
-    <ul>
-        {% for employee in employees %}
-        <li>{{ employee.first_name }} {{ employee.last_name }} - {{ employee.position }}</li>
-        {% endfor %}
-    </ul> 
+    <table border="1">
+        <thead>
+            <tr>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Department</th>
+                <th>Designation</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for employee in employees%}
+            <tr>
+                <td>{{employee.first_name}}</td>
+                <td>{{employee.last_name}}</td>
+                <td>{{employee.email}}</td>
+                <td>{{employee.phone}}</td>
+                <td>{{employee.department}}</td>
+                <td>{{employee.designation}}</td>
+                <td>
+                    <a href="{% url 'delete_employee' employee.id %}">Delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+
+        </tbody>
+    </table>
+
 </body>
 </html>
