@@ -1,0 +1,14 @@
+{% comment %} this is for employee login {% endcomment %}
+
+{% extends "homepage.html" %}
+
+{% block title %}Login page{% endblock title %}
+
+{% block content %}
+    <h2>Login</h2>
+    <form method="post">
+        {%csrf_token%}
+        {{form.as_p}}
+        <button type="submit">Login</button>
+    </form>
+{% endblock content %}

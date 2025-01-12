@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Leaves</title>
+</head>
+<body>
+    <h2>Manage Leave Requests</h2>
+    <table border="1">
+        <tr>
+            <th>Employee</th>
+            <th>Leave Type</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Reason</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+        {% for leave in leave_applications %}
+        <tr>
+            <td>{{leave.employee.username}}</td>
+            <td>{{leave.leave_type}}</td>
+            <td>{{leave.start_date}}</td>
+            <td>{{leave.end_date}}</td>
+            <td>{{leave.reason}}</td>
+            <td>{{leave.status}}</td>
+            <td>
+                {% if leave.status == "Pending" %}
+                    <a href="{% url 'update_leave_status' leave.id 'Approved' %}">Approve</a>
+                    <a href="{% url 'update_leave_status' leave.id 'Rejected' %}">Reject</a>
+                {% else %}
+                    Served
+                {% endif %}
+                
+            </td>
+        </tr>
+        {% endfor %} 
+    </table>
+</body>
+</html>
