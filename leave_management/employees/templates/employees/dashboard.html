@@ -10,4 +10,9 @@
     <li><a href="{% url 'apply_leave' %}">Apply for Leave</a></li>
     <li><a href="{% url 'password_change'%}">Change password</a></li>
 </ul>
+<hr>
+<form method="post" action="{% url 'logout' %}" style="display:inline">
+    {% csrf_token %}
+    <button type="submit">Logout</button>
+</form>
 {% endblock content %}

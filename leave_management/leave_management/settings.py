@@ -136,6 +136,6 @@ DEFAULT_FROM_EMAIL='empmanage12@gmail.com'
 
 
 
-LOGIN_REDIRECT_URL='dashboard'
+LOGIN_REDIRECT_URL='/'
 LOGIN_URL='login'
 LOGOUT_REDIRECT_URL='base'
