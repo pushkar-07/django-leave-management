@@ -3,9 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Homepage</title>
+    <title>{% block title %}
+            Homepage
+        {% endblock title %}
+    </title>
 </head>
 <body>
-    <h1>Welcome to the Leave Management System</h1>
+    {% block content %}
+    <header>
+        <h1>Welcome to the Leave Management System</h1>
+        {% comment %} <a href="{% url 'apply_leave' %}">Apply for Leave</a> {% endcomment %}
+    {% if user.is_authenticated %}
+        <p>Welcome, {{user.username}}</p>
+        {% if user.is_staff %}
+            <a href="{% url 'manage_leaves' %}">Admin Dashboard</a>
+            <a href="/admin/">Admin Panel</a>
+        {% else %}
+            <a href="{% url 'dashboard' %}">Dashboard</a>
+        {% endif %}
+        <hr>
+        <a href="{% url 'password_change'  %}">Change Password</a>
+        <hr>
+        <form method="post" action="{% url 'logout' %}" style="display:inline">
+            {% csrf_token %}
+            <button type="submit">Logout</button>
+        </form>
+    {% else %}
+        <a href="{% url 'login_admin' %}">Login as Admin</a>
+        <a href="{% url 'login' %}">Login as Employee</a>
+    {% endif %}
+    
+    </header>
+    <hr>
+
+   
+    {% endblock content %}
+
+
 </body>
 </html>
