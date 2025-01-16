@@ -7,38 +7,83 @@
             Homepage
         {% endblock title %}
     </title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-image: linear-gradient(180deg, rgba(255, 0, 0, 0), rgb(152, 253, 251));
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+        .row{
+            margin-top:100px;
+            margin-left:100px;
+            margin-right:100px;
+        }
+        .card{
+            min-height:200px;
+            background-color:rgb(30, 32, 32);
+        }
+        .btn{
+            background-color:rgb(52, 138, 157);
+            margin-top:50px;
+            
+        }
+        
+    </style>
 </head>
 <body>
     {% block content %}
     <header>
-        <h1>Welcome to the Leave Management System</h1>
-        {% comment %} <a href="{% url 'apply_leave' %}">Apply for Leave</a> {% endcomment %}
-    {% if user.is_authenticated %}
-        <p>Welcome, {{user.username}}</p>
-        {% if user.is_staff %}
-            <a href="{% url 'manage_leaves' %}">Admin Dashboard</a>
-            <a href="/admin/">Admin Panel</a>
+        <h1 class="heading text-center">Employee Leave Management System</h1>
+        <hr><hr>
+
+        {% if user.is_authenticated %}
+            {% if user.is_staff %}
+                <p>Welcome, {{user.username}}</p>
+                <a href="{% url 'manage_leaves' %}">Admin Dashboard</a>
+                <a href="/admin/">Admin Panel</a>
+            {% else %}
+                <p>Welcome, {{user.first_name}}</p>
+                <a href="{% url 'dashboard' %}">Dashboard</a>
+            {% endif %}
+            <hr>
+            <a href="{% url 'password_change'  %}">Change Password</a>
+            <hr>
+            <form method="post" action="{% url 'logout' %}" style="display:inline">
+                {% csrf_token %}
+                <button type="submit">Logout</button>
+            </form>
+    
         {% else %}
-            <a href="{% url 'dashboard' %}">Dashboard</a>
+            <div class="row">
+                <div class="col-sm-6 mb-3 mb-sm-0">
+                  <div class="card text-center">
+                    <div class="card-body">
+                      <h5 class="card-title" style="color:white;" >Admin</h5>
+                      <a href="{% url 'login_admin' %}" class="btn btn-primary">Login as Admin</a>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-sm-6">
+                  <div class="card text-center">
+                    <div class="card-body">
+                      <h5 class="card-title" style="color:white;">Employee</h5>
+                      <a href="{% url 'login' %}" class="btn btn-primary">Login as Employee</a>
+                    </div>
+                  </div>
+                </div>
+              </div>
         {% endif %}
-        <hr>
-        <a href="{% url 'password_change'  %}">Change Password</a>
-        <hr>
-        <form method="post" action="{% url 'logout' %}" style="display:inline">
-            {% csrf_token %}
-            <button type="submit">Logout</button>
-        </form>
-    {% else %}
-        <a href="{% url 'login_admin' %}">Login as Admin</a>
-        <a href="{% url 'login' %}">Login as Employee</a>
-    {% endif %}
     
     </header>
-    <hr>
-
-   
+    
     {% endblock content %}
 
 
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
 </body>
 </html>

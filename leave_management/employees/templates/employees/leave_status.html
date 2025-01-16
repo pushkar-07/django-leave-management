@@ -10,16 +10,14 @@
     <table border="1">
         <tr>
             <th>Leave Type</th>
-            <th>Start Date</th>
-            <th>End Date</th>
+            <th>Leave Date</th>
             <th>Status</th>
             <th>Reason</th>
         </tr>
         {% for leave in leave_applications %}
         <tr>
             <td>{{ leave.leave_type}}</td>
-            <td>{{ leave.start_date}}</td>
-            <td>{{ leave.end_date}}</td>
+            <td>{{ leave.leave_date}}</td>
             <td>{{ leave.status}}</td>
             <td>{{ leave.reason}}</td>
         </tr>

@@ -21,6 +21,10 @@ class LeaveApplication(models.Model):
         ('Casual','Casual Leave'),
         ('Other','Other'),
     ]
+    LEAVE_DURATION_CHOICES=[
+        ('Full Day','Full Day'),
+        ('Half Day','Half Day'),
+    ]
 
     STATUS_CHOICES = [
         ('Pending','Pending'),
@@ -29,11 +33,12 @@ class LeaveApplication(models.Model):
     ]
 
     employee=models.ForeignKey(User, on_delete=models.CASCADE)
+    leave_duration=models.CharField(max_length=10,choices=LEAVE_DURATION_CHOICES,default='Full Day')
     leave_type=models.CharField(max_length=20,choices=LEAVE_TYPES)
-    start_date=models.DateField()
-    end_date=models.DateField()
+    leave_date=models.DateField()
     reason=models.TextField()
     status=models.CharField(max_length=10,choices=STATUS_CHOICES,default='Pending')
-
+    admin_reason=models.TextField(null=True,blank=True)
+    applied_date=models.DateTimeField(auto_now_add=True)
     def __str__(self):
         return f"{self.employee.username} - {self.leave_type} ({self.status})"

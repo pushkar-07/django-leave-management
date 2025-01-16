@@ -4,15 +4,111 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Apply Leave</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <style>
+        body{
+            background-color:#f8f9fa;
+            font-family:'Poppins',sans-serif;
+        }
+        .container{
+            margin-top:50px;
+            max-width: 600px;
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #343a40;
+            font-weight: 600;
+        }
+        .form-label {
+            font-weight: bold;
+            color: #495057;
+            font-size: 16px;
+        }
+        .form-control {
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            padding: 10px 15px;
+            transition: all 0.3s;
+        }
+        .form-control:focus {
+            border-color:rgb(131, 207, 224);
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+        }
+        .btn-primary {
+            background-color:rgb(81, 158, 184);
+            color: rgb(255, 255, 255);
+            font-weight: bold;
+            padding: 10px;
+            border-radius: 8px;
+            border: none;
+            font-size: 18px;
+        }
+        .btn-primary:hover {
+            background-color:rgb(19, 106, 143);
+            color: #fff;
+        }
+        .dashboard-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            font-weight: bold;
+            color: #007bff;
+            text-decoration: none;
+        }
+        .dashboard-link:hover {
+            color: #0056b3;
+        }
+    </style>
 </head>
 <body>
-   <h2>Apply for Leave</h2>
-   <form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Submit</button>
-   </form>
-   <a href="{% url 'logout' %}">Logout</a>
+    <div class="container">
+    <h2>Apply for Leave</h2>
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="mb-3">
+            <label for="leave_duration" class="form-label">Leave Duration</label>
+            <select class="form-select" id="leave_duration" name="leave_duration" required>
+                <option value="" selected disabled>Select</option>
+                <option value="Full Day">Full Day</option>
+                <option value="Half Day">Half day</option>
+              </select>
+        </div>
+        <div class="mb-3">
+            <label for="leave_type" class="form-label">Type of leave</label>
+            <select class="form-select" id="leave_type" name="leave_type" required>
+                <option value="" selected disabled>Select</option>
+                <option value="Sick" >Sick Leave</option>
+                <option value="Casual" >Casual Leave</option>
+                <option value="Other" >Other</option>
+              </select>
+        </div>
+        <div class="mb-3">
+            <label for="leave_date" class="form-label">Leave Date</label>
+            <input type="date" class="form-control" id="leave_date" name="leave_date" required>
+        </div>
+        <div class="mb-3">
+            <label for="reason" class="form-label">Reason</label>
+            <textarea class="form-control" name="reason" id="reason" rows="3" required></textarea>
+        </div>
+        <div class="d-grid gap-2">
+            <button class="btn btn-primary" type="submit">Submit</button>
+        </div>   
+    </form>
+    <hr>
+    
+
+    <a href="{% url 'dashboard' %}" class="dashboard-link">Go to dashboard</a>
+
+    </div>
+    
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
 
 </body>
 </html>

@@ -1,0 +1,15 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+<h2>Leave Application</h2>
+<p><strong>Employee:</strong>{{leave.employee.first_name}} {{leave.employee.last_name}}</p>
+<p><strong>Leave Duration:</strong>{{leave.leave_duration}}</p>
+<p><strong>Leave Type:</strong>{{leave.leave_type}}</p>
+<p><strong>Leave Date:</strong>{{leave.leave_date}}</p>
+<p><strong>Reason for Leave:</strong>{{leave.reason}}</p>
+<p><strong>Application Status:</strong>{{leave.status}}</p>
+<p><strong>Admin's reason:</strong>{{leave.admin_reason}}</p>
+
+<a href="{% url 'manage_leaves' %}">Back to Leave List</a>
+{% endblock content %}
+

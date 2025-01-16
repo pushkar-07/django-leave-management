@@ -1,11 +1,65 @@
-{% extends "homepage.html" %}
+ {% extends "homepage.html" %}
+
+
+{% block title %}Login Page{% endblock title %}
 
 {% block content %}
-<h2>Admin Login</h2>
-<form action="" method="post">
-    {% csrf_token %}
-    {{form.as_p}}
-    <button type="submit">Login</button>
-</form>
+<style>
+    .login-container{
+        background-color:rgb(173, 209, 226); 
+        padding:20px;
+        border-radius:8px;
+        min-height:300px;
+
+    }
+    .btn{
+        background-color:rgb(25, 24, 24);
+        border-style:solid;
+        border-color:rgb(18, 18, 18);
+        margin-top:20px;
+    }
+
+
+</style>
+
+
+<div class="container mt-5" >
+    <div class="row justify-content-center">
+        <div class="col-md-4">
+            <h2 class="text-center mb-3">Admin Login</h2>
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger" role="alert">
+                    {% for error in form.non_field_errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="login-container mt-5 shadow-lg p-3 mb-5 bg-body-tertiary rounded">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="{{form.username.id_for_label}}" class="form-label">Username</label>
+                        <input type="text" name="username" id="{{ form.username.id_for_label }}" class="form-control" placeholder="Type your username here" required>
+                        {{form.username.errors}}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{form.password.id_for_label}}" class="form-label">Password</label>
+                        <input type="password" name="password" id="{{ form.password.id_for_label }}" class="form-control" placeholder="Enter your password" required>
+                        {{ form.password.errors }}                   
+                        
+                    </div>
+                    
+                    <div class="d-grid gap-2 col-6 mx-auto">
+                        <button class="btn btn-primary" type="submit">Login</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
 {% endblock content %}
+
 

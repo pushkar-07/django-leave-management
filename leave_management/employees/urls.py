@@ -2,6 +2,8 @@ from django.urls import path
 from django.contrib.auth import views as auth_views
 from . import views # importing views from the same app
 from .views import AdminLoginView,EmployeeLoginView
+from django.views.decorators.cache import cache_control
+
 urlpatterns = [
     # there is no need for employees to access other employee info
     #path('', views.employee_list, name='employee_list'),
@@ -16,7 +18,9 @@ urlpatterns = [
     path('apply-leave/',views.apply_leave,name='apply_leave'),
     path('leave-status/',views.leave_status,name='leave_status'),
     path('manage-leaves/',views.manage_leaves,name='manage_leaves'),
-    path('update-leave-status/<int:leave_id>/<str:status>/',views.update_leave_status,name='update_leave_status'),
+    path('update-leave-status/<int:leave_id>/',views.update_leave_status,name='update_leave_status'),
+    path('view-leave/<int:leave_id>/',views.view_leave,name='view_leave'),
+
 ]
 
 

@@ -4,38 +4,84 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Leaves</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
 </head>
 <body>
     <h2>Manage Leave Requests</h2>
-    <table border="1">
-        <tr>
-            <th>Employee</th>
-            <th>Leave Type</th>
-            <th>Start Date</th>
-            <th>End Date</th>
-            <th>Reason</th>
-            <th>Status</th>
-            <th>Actions</th>
-        </tr>
+    <form action="" method="get" class="sort-form" id="filter-form">
+        <label for="employee_name" class="form-label" >Search by Employee:</label>
+        <input type="text" name="employee_name" value="{{filters.employee_name}}" placeholder="search employee" oninput="debounceSubmit('filter-form')">
+
+        <label for="leave_duration">Filter by leave type:</label>
+        <select name="leave_duration" id="leave_duration" onchange="this.form.submit()">
+            <option value="">All</option>
+            <option value="Full Day" {% if filters.leave_duration == 'Full Day' %}selected{% endif %}>Full Day</option>
+            <option value="Half Day" {% if filters.leave_duration == 'Half Day' %}selected{% endif %}>Half Day</option>
+        </select>
+
+        <label for="status">Filter by Status:</label>
+        <select name="status" id="" onchange="this.form.submit()">
+            <option value="">All</option>
+            <option value="Pending" {% if filters.status == 'Pending' %}selected{% endif %}>Pending</option>
+            <option value="Approved" {% if filters.status == 'Approved' %}selected{% endif %}>Approved</option>
+            <option value="Rejected" {% if filters.status == 'Rejected' %}selected{% endif %}>Rejected</option>
+        </select>
+
+        <label for="sort_by" class="form-label">Sort By:</label>
+        <select name="sort_by" id="" onchange="this.form.submit()">
+            <option value="applied_date" {% if filters.sort_by == 'applied_date' %}selected{% endif %}>Date Applied</option>
+            <option value="leave_date" {% if filters.sort_by == 'leave_date' %}selected{% endif %}>Leave Date</option>
+            <option value="status" {% if filters.sort_by == 'status' %}selected{% endif %}>Status</option>
+        </select>
+    </form>
+<div class="table-responsive">
+    <table border="1" class="table table-striped table-bordered table-hover" >
+        <caption>List of Leave Applications</caption>
+        <thead class="table-dark">
+            <tr>
+                <th scope="col">Employee</th>
+                <th scope="col">Leave Duration</th>
+                <th scope="col">Leave Date</th>
+                <th scope="col">Status</th>
+                <th scope="col">Actions</th>
+                <th scope="col">Application</th>
+            </tr>
+        </thead>
+        <tbody>
         {% for leave in leave_applications %}
         <tr>
-            <td>{{leave.employee.username}}</td>
-            <td>{{leave.leave_type}}</td>
-            <td>{{leave.start_date}}</td>
-            <td>{{leave.end_date}}</td>
-            <td>{{leave.reason}}</td>
+            <td>{{leave.employee.get_full_name}}</td>
+            <td>{{leave.leave_duration}}</td>
+            <td>{{leave.leave_date}}</td>
             <td>{{leave.status}}</td>
             <td>
                 {% if leave.status == "Pending" %}
-                    <a href="{% url 'update_leave_status' leave.id 'Approved' %}">Approve</a>
-                    <a href="{% url 'update_leave_status' leave.id 'Rejected' %}">Reject</a>
+                    <a href="{% url 'update_leave_status' leave.id %}">Open</a>
                 {% else %}
                     Served
                 {% endif %}
                 
             </td>
+            <td>
+                <a href="{% url 'view_leave' leave.id %}">View</a>
+            </td>
         </tr>
-        {% endfor %} 
+        {% endfor %}
+    </tbody> 
     </table>
+</div>
+<script>
+    let debounceTimeout;
+    function debounceSubmit(formId){
+        clearTimeout(debounceTimeout);
+        debounceTimeout=setTimeout(()=>{
+            document.getElementById(formId).submit();
+        },800);
+    }
+</script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+
 </body>
 </html>
