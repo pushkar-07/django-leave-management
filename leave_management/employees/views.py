@@ -1,12 +1,13 @@
 from django.shortcuts import render,get_object_or_404,redirect
 from .models import Employee,LeaveApplication
-from .forms import LeaveApplicationForm
+from .forms import LeaveApplicationForm,CustomAuthenticationForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.views import LoginView
 from django.core.mail import send_mail
 from django.conf import settings
 from django.db.models import Q
+from django.contrib.auth.models import User
 
 # Create your views here.
 
@@ -25,7 +26,15 @@ def employee_list(request):
 @staff_member_required
 def delete_employee(request,employee_id):
     employee=get_object_or_404(Employee,id=employee_id)
-    employee.delete()
+    employee.is_active=False
+    employee.save()
+    
+    try:
+        user=User.objects.get(email=employee.email)
+        user.is_active=False
+        user.save()
+    except User.DoesNotExist:
+        pass
     return redirect('employee_list')
 
 @login_required
@@ -119,16 +128,52 @@ def view_leave(request,leave_id):
 
 class AdminLoginView(LoginView):
     template_name = 'employees/login_admin.html'
+    authentication_form = CustomAuthenticationForm
+
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated:
             return redirect('homepage')
         return super().dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        remember_me=form.cleaned_data.get('remember_me')
+        if remember_me:
+            self.request.session.set_expiry(60*60*24*30) #keeping it 30 days
+        else:
+            self.request.session.set_expiry(0)
+
+        return super().form_valid(form)
+    
 
 class EmployeeLoginView(LoginView):
     template_name='employees/login.html'
+    authentication_form=CustomAuthenticationForm
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated:
             return redirect('homepage')
         return super().dispatch(request, *args, **kwargs)
+   
+    def form_valid(self, form):
+        user=form.get_user()
+        if not user.is_active:
+            form.add_error(None,"You are no longer an employee of our company.")
+            return self.form_invalid(form)
+        
+        try:
+            employee=Employee.objects.get(email=user.email)
+            if not employee.is_active:
+                form.add_error(None,"You are no longer a part of our company.")
+                return self.form_invalid(form)
+        except Employee.DoesNotExist:
+            form.add_error(None,"No associated employee record found.")
+            return self.form_invalid(form)
+        
+        remember_me=form.cleaned_data.get('remember_me')
+        if remember_me:
+            self.request.session.set_expiry(60*60*24*30) #keeping it 30 days
+        else:
+            self.request.session.set_expiry(0)
+        return super().form_valid(form)
+    

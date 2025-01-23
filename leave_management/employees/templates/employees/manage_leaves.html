@@ -51,7 +51,13 @@
         <tbody>
         {% for leave in leave_applications %}
         <tr>
-            <td>{{leave.employee.get_full_name}}</td>
+            <td>
+                {% if leave.employee and leave.employee.is_active %}
+                    {{leave.employee.get_full_name}}
+                {% else %}
+                    {{leave.employee_name}} (Inactive)
+                {% endif %}
+            </td>
             <td>{{leave.leave_duration}}</td>
             <td>{{leave.leave_date}}</td>
             <td>{{leave.status}}</td>
