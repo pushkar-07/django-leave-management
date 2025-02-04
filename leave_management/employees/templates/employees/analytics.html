@@ -1,0 +1,45 @@
+{% extends "homepage.html" %}
+
+{% block title %}Leave Analytics{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center">📊 Leave Analytics Dashboard</h2>
+
+    {% if message %}
+        <p class="text-danger text-center">{{ message }}</p>
+    {% else %}
+        <div class="row mt-4">
+            <!-- Monthly Leave Trends -->
+            <div class="col-md-4">
+                <h4>📅 Leave Trends (Per Month)</h4>
+                <ul>
+                    {% for month, count in leave_trends.items %}
+                        <li>Month {{ month }}: {{ count }} Leaves</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <!-- Employee Leave Count -->
+            <div class="col-md-4">
+                <h4>👤 Employee Leave Count</h4>
+                <ul>
+                    {% for emp, count in employee_leave_count.items %}
+                        <li>Employee ID {{ emp }}: {{ count }} Leaves</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <!-- Department-wise Leave Trends -->
+            <div class="col-md-4">
+                <h4>🏢 Department-Wise Leave</h4>
+                <ul>
+                    {% for dept, count in department_leave_count.items %}
+                        <li>{{ dept }}: {{ count }} Leaves</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

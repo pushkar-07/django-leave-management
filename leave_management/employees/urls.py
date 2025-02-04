@@ -1,7 +1,7 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
 from . import views # importing views from the same app
-from .views import AdminLoginView,EmployeeLoginView,claim_bonus
+from .views import AdminLoginView,EmployeeLoginView
 from django.views.decorators.cache import cache_control
 from .forms import CustomPasswordResetForm
 
@@ -25,6 +25,7 @@ urlpatterns = [
     path('admin-dashboard/',views.admin_dashboard,name='admin_dashboard'),
     path('employee-section/',views.employee_section,name='employee_section'),
     path('claim-bonus/',views.claim_bonus,name='claim_bonus'),
+    path('analytics/',views.leave_analytics,name='leave_analytics'),
 ]
 
 

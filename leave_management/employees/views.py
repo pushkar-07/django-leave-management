@@ -1,3 +1,4 @@
+import pandas as pd
 from django.shortcuts import render,get_object_or_404,redirect
 from .models import Employee,LeaveApplication,BonusClaim
 from .forms import LeaveApplicationForm,CustomAuthenticationForm
@@ -235,4 +236,37 @@ def claim_bonus(request):
         employee.bonus_amount = 0
         employee.save()
         return redirect('bonus_success')
-    return render(request,'employees/no_bonus.html')  
+    return render(request,'employees/no_bonus.html')
+
+def leave_analytics(request):
+    # Fetch leave applications and convert them into a DataFrame
+    leaves = LeaveApplication.objects.all().values()
+    df = pd.DataFrame(list(leaves))
+
+    # If there are no leave applications, return an empty response
+    if df.empty:
+        return render(request, "employees/analytics.html", {"message": "No leave data available yet."})
+
+    # Convert datetime fields
+    df['leave_date'] = pd.to_datetime(df['leave_date'])
+
+    # Leave trend analysis
+    leave_trends = df.groupby(df['leave_date'].dt.month)['id'].count().to_dict()  # Leaves per month
+
+    # Employee-wise leave count
+    employee_leave_count = df['employee_id'].value_counts().to_dict()
+
+    # Department-wise leave count
+    employees = Employee.objects.all().values("id", "department")
+    emp_df = pd.DataFrame(list(employees))
+    merged_df = df.merge(emp_df, left_on="employee_id", right_on="id")
+    department_leave_count = merged_df.groupby("department")["id_x"].count().to_dict()
+
+    # Data to send to frontend
+    analytics_data = {
+        "leave_trends": leave_trends,
+        "employee_leave_count": employee_leave_count,
+        "department_leave_count": department_leave_count,
+    }
+
+    return render(request, "employees/analytics.html", analytics_data)
