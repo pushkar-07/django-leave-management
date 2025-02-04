@@ -82,20 +82,17 @@
             <ul class="nav nav-pills flex-column mb-auto">
             <li class="nav-item">
                 <a href="\" class="nav-link" aria-current="page">
-                {% comment %} <svg class="bi me-2" width="16" height="16"><use xlink:href="#home"/></svg> {% endcomment %}
                 Dashboard
                 </a>
             </li>
 
             <li class="nav-item">
-                <a href="/admin/" class="nav-link text-white">
-                {% comment %} <svg class="bi me-2" width="16" height="16"><use xlink:href="#table"/></svg> {% endcomment %}
+                <a href="{% url 'employee_section' %}" class="nav-link text-white">
                 Employee Section
                 </a>
             </li>
             <li class="nav-item">
                 <a href="{% url 'manage_leaves' %}" class="nav-link text-white active">
-                {% comment %} <svg class="bi me-2" width="16" height="16"><use xlink:href="#grid"/></svg> {% endcomment %}
                 Leaves Section
                 </a>
             </li>
@@ -105,7 +102,6 @@
         <div class="user-section">
             <hr>
             <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
-              {% comment %} <img src="https://github.com/mdo.png" alt="" width="32" height="32" class="rounded-circle me-2"> {% endcomment %}
               <strong class="align-items-center">User</strong>
             </a>
             <ul class="dropdown-menu dropdown-menu-dark text-small shadow p-3" aria-labelledby="dropdownUser1">

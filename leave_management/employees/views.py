@@ -1,5 +1,5 @@
 from django.shortcuts import render,get_object_or_404,redirect
-from .models import Employee,LeaveApplication
+from .models import Employee,LeaveApplication,BonusClaim
 from .forms import LeaveApplicationForm,CustomAuthenticationForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
@@ -226,4 +226,13 @@ class EmployeeLoginView(LoginView):
         else:
             self.request.session.set_expiry(0)
         return super().form_valid(form)
-    
+
+@login_required
+def claim_bonus(request):
+    employee = request.user.employee
+    if employee.bonus_amount > 0:
+        claim=BonusClaim.objects.create(employee=employee,amount=employee.bonus_amount)
+        employee.bonus_amount = 0
+        employee.save()
+        return redirect('bonus_success')
+    return render(request,'employees/no_bonus.html')  

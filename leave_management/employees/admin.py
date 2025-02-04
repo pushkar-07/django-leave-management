@@ -1,6 +1,6 @@
 import random,string
 from django.contrib import admin
-from .models import Employee,LeaveApplication
+from .models import Employee,LeaveApplication,BonusClaim
 from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth.admin import UserAdmin
@@ -64,27 +64,8 @@ class EmployeeAdmin(admin.ModelAdmin):
         except Exception as e:
             print(f"Error deactivating user: {e}")
             
-        # leaves=LeaveApplication.objects.filter(employee=obj)
-        # for leave in leaves:
-        #     leave.employee_name=f"{obj.first_name} {obj.last_name}"
-        #     leave.employee_email=obj.email
-        #     leave.save()
         obj.is_active = False    
         obj.save()
-
-        # LeaveApplication.objects.filter(
-        #     employee=obj,
-        #     status__in=['Pending']
-        # ).update(status='Cancelled')
-        
-        # LeaveApplication.objects.filter(
-        #     employee=user
-        # ).update(
-        #     employee_name=f"{obj.first_name} {obj.last_name}",
-        #     employee_email=obj.email,
-        #     employee=None,
-        #     status='Cancelled'
-        # )
 
     def generate_random_password(self):
         return ''.join(random.choices(string.ascii_letters + string.digits, k=8))
@@ -118,3 +99,14 @@ class CustomUserAdmin(UserAdmin):
 admin.site.unregister(User)
 admin.site.register(User,CustomUserAdmin)
 
+@admin.register(BonusClaim)
+class BonusClaimAdmin(admin.ModelAdmin):
+    list_display=('employee','amount','status','created_at')
+    list_filter=('status',)
+    actions = ['approve_claims']
+
+    def approve_claims(self,request,queryset):
+        queryset.update(status='Approved')
+        self.message_user(request,"Selected claims have been approved!")
+    
+    approve_claims.short_description ="Approve selected bonus claims"

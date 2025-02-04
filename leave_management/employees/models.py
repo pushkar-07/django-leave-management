@@ -11,7 +11,18 @@ class Employee(models.Model):
     date_joined=models.DateField(default="2024-12-01")
     leave_balance=models.IntegerField(default=2)
     is_active=models.BooleanField(default=True)
+    bonus_amount=models.DecimalField(max_digits=10, decimal_places=2,default=0.0)
     # supervisor = models.ForeignKey('self',null=True,blank=True,on_delete=models.SET_NULL)
+
+    def calculate_bonus(self):
+        """Convert extra leaves (above 16) into money."""
+        if self.leave_balance > 16:
+            extra_leaves=self.leave_balance-16
+            bonus_per_leave = 500
+            self.bonus_amount = extra_leaves * bonus_per_leave
+        else:
+            self.bonus_amount = 0
+        self.save()
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
@@ -70,3 +81,12 @@ class LeaveApplication(models.Model):
 
     def __str__(self):
         return f"{self.employee.username or 'Unknown Employee'} - {self.leave_type} ({self.status})"
+
+class BonusClaim(models.Model):
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    amount =models.DecimalField(max_digits=10,decimal_places=2)
+    status=models.CharField(max_length=20,choices=[('Pending','Pending'),('Approved','Approved'),('Rejected','Rejected')],default='Pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.employee.user.first_name} - {self.amount} - {self.status}"

@@ -1,0 +1,23 @@
+{% extends "homepage.html" %}
+
+{% block title %}Claim Bonus{% endblock title %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center">Claim Your Leave Bonus</h2>
+    
+    <div class="card p-4 shadow-lg mt-4">
+        {% if user.employee.bonus_amount > 0 %}
+            <p class="lead text-success">
+                🎉 You have a bonus of <strong>${{ user.employee.bonus_amount }}</strong> available.
+            </p>
+            <form method="POST" action="{% url 'claim_bonus' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary">Claim Bonus</button>
+            </form>
+        {% else %}
+            <p class="lead text-danger">❌ No bonus available at the moment.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
