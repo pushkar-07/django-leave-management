@@ -8,6 +8,7 @@
         {% endblock title %}
     </title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
         html, body {
             height: 100%;
@@ -24,40 +25,99 @@
         }
         .card{
             min-height:200px;
-            background-color:rgb(30, 32, 32);
+            background-color:rgb(41, 49, 49);
+            box-shadow: 0 6px 2px -2px rgba(0, 0, 0, 0.2);
+
         }
         .btn{
-            background-color:rgb(52, 138, 157);
+            background-color:rgb(24, 151, 151);
             margin-top:50px;
             
         }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 225px;
+            background-color: #343a40; 
+            padding-top: 20px;
+            display:flex;
+            flex-direction:column;
+            justify-content:space-between;
+        }
+
+        .sidebar .nav-link {
+            color: #ffffff;
+            font-size: 18px;
+            padding: 10px 20px;
+            display: block;
+            transition: 0.3s;
+        }
+
+        .sidebar .nav-link:hover {
+            background-color: #495057;
+        }
+
+        .sidebar .nav-link.active {
+            background-color: #007bff;
+            font-weight: bold;
+        }
+
+        .user-section{
+            margin-top:auto;
+            padding-top: 1rem;
+        }
+        .user-section a{
+            color:white;
+            text-decoration:none;
+            font-size:16px;
+            display:bock;
+            padding: 5px 0;
+        }
+
         
+        .content{
+            margin-left: 225px;
+            padding: 20px;
+        }
+
+        .page-header{
+            text-align:center;
+            background-color:rgb(106, 178, 178);
+            color:white;
+            margin-left: 225px;
+            margin-bottom:15px;
+            padding:13px;
+            box-shadow: 0 6px 2px -2px rgba(0, 0, 0, 0.2);
+            
+        }
+        .header{
+            text-align:center;
+            background-color:rgb(24, 151, 151);
+            color:white;
+            padding:13px;
+            box-shadow: 0 6px 2px -2px rgba(0, 0, 0, 0.2);
+        }
     </style>
 </head>
 <body>
     {% block content %}
-    <header>
-        <h1 class="heading text-center">Employee Leave Management System</h1>
-        <hr><hr>
-
         {% if user.is_authenticated %}
             {% if user.is_staff %}
-                <p>Welcome, {{user.username}}</p>
-                <a href="{% url 'manage_leaves' %}">Admin Dashboard</a>
-                <a href="/admin/">Admin Panel</a>
+              <script>window.location.href = "{% url "admin_dashboard" %}";</script>
             {% else %}
                 <p>Welcome, {{user.first_name}}</p>
                 <a href="{% url 'dashboard' %}">Dashboard</a>
+                <a class="dropdown-item" href="{%url 'logout' %}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Logout</a>
+                    <form id="logout-form" method="post" action="{% url 'logout' %}" style="display:none">
+                      {% csrf_token %}
+                    </form>
             {% endif %}
-            <hr>
-            <a href="{% url 'password_change'  %}">Change Password</a>
-            <hr>
-            <form method="post" action="{% url 'logout' %}" style="display:inline">
-                {% csrf_token %}
-                <button type="submit">Logout</button>
-            </form>
     
         {% else %}
+        <div class="header"><h2>Leave Management System</h2></div>
             <div class="row">
                 <div class="col-sm-6 mb-3 mb-sm-0">
                   <div class="card text-center">
@@ -78,7 +138,7 @@
               </div>
         {% endif %}
     
-    </header>
+   
     
     {% endblock content %}
 

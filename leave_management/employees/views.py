@@ -8,14 +8,30 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.db.models import Q
 from django.contrib.auth.models import User
+from django.contrib import messages
 
 # Create your views here.
 
+@staff_member_required
+def admin_dashboard(request):
+    context={
+    'total_requests':LeaveApplication.objects.count(),
+    'pending_requests': LeaveApplication.objects.filter(status='Pending').count(),
+    'approved_requests': LeaveApplication.objects.filter(status='Approved').count(),
+    'rejected_requests': LeaveApplication.objects.filter(status='Rejected').count(),
+    'total_employees':Employee.objects.filter(is_active=True).count(),
+    }
+    return render(request,'employees/admin_dashboard.html',context)
+
+@staff_member_required
+def employee_section(request):
+    context={'total_employees':Employee.objects.filter(is_active=True).count(),}
+    return render(request,'employees/employee_section.html',context)
 
 @login_required
 def dashboard(request):
     if request.user.is_staff:
-        return redirect('manage_leaves')
+        return redirect('admin_dashboard')
     return render(request,'employees/dashboard.html')
 
 @staff_member_required
@@ -41,17 +57,40 @@ def delete_employee(request,employee_id):
 def apply_leave(request):
     if request.method == 'POST':
         form = LeaveApplicationForm(request.POST)
-        if form.is_valid():
-            leave=form.save(commit=False)
-            leave.employee=request.user
-            leave.save()
-            return redirect('leave_status')
-        else:
-            print("Form errors:", form.errors)
-        
+        try:
+            employee=Employee.objects.get(email=request.user.email)
+            if form.is_valid():
+                leave=form.save(commit=False)
+                leave.employee=request.user
+                leave.employee_email = request.user.email
+                # employee=Employee.objects.filter(email=request.user.email).first()
+                if employee.leave_balance > 0:
+                    leave.save() #deducting the leave in the model's save method
+                    return redirect('leave_status')
+                else:
+                    form.add_error(None,"Insufficient leave balance.") 
+        except Employee.DoesNotExist:
+            form.add_error(None, "No employee record found for this user.")   
     else:
         form = LeaveApplicationForm()
     return render(request,'employees/apply_leave.html',{'form':form})
+    # if request.method == 'POST':
+    #     form = LeaveApplicationForm(request.POST)
+    #     employee =Employee.objects.filter(email=request.user.email).first()
+
+    #     if employee and employee.leave_balance <= 0:
+    #         messages.error(request,"Insufficient leave balance. cannot apply for leave.")
+    #         return render(request,'employees/apply_leave.html',{'form':form})
+        
+    #     if form.is_valid():
+    #         leave = form.save(commit=False)
+    #         leave.employee =request.user
+    #         leave.employee_email = request.user.email
+    #         leave.save()
+    #         return redirect('leave_status')
+    # else:
+    #     form =LeaveApplicationForm()
+    # return render(request,'employees/apply_leave.html',{'form':form})
 
 @login_required
 def leave_status(request):
@@ -103,10 +142,21 @@ def update_leave_status(request,leave_id):
     if request.method=='POST':
         admin_reason=request.POST.get('admin_reason')
         status=request.POST.get('status')
+        previous_status = leave.status
         leave.status=status
         leave.admin_reason=admin_reason
         leave.save()
 
+        if previous_status != status:
+            employee=Employee.objects.filter(email=leave.employee.email).first()
+            if employee:
+                if status == 'Rejected':
+                    employee.leave_balance += 1
+                    employee.save()
+                elif status == 'Approved':
+                    pass # leave already deducted during application , no need to deduct again
+
+#sending email
         subject=f"Your Leave Application Status: {status}"
         message=f"""
         Dear {leave.employee.first_name},

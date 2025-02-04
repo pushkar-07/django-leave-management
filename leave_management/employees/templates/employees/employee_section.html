@@ -1,0 +1,81 @@
+{% extends "homepage.html" %}
+{% block title %}
+Employee Section
+{% endblock title %}
+
+{% block content %}
+<div class="page-header fixed-top"><h2>Employee Section</h2></div>
+
+<div class="sidebar text-white bg-dark p-3">
+    <div class="sidebar-content">
+        <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">   
+          <span class="fs-4">Menu</span>
+        </a>
+        <hr>
+        <ul class="nav nav-pills flex-column mb-auto">
+          <li class="nav-item mt-2">
+            <a href="/" class="nav-link" aria-current="page">
+              Dashboard
+            </a>
+          </li>
+
+          <li class="nav-item mt-2">
+            {% comment %} <a href="/admin/" class="nav-link text-white"> {% endcomment %}
+            <a href="{% url 'employee_section' %}" class="nav-link text-white active">
+              Employee Section
+            </a>
+          </li>
+          <li class="nav-item mt-2">
+            <a href="{% url 'manage_leaves' %}" class="nav-link text-white">
+              Leaves Section
+            </a>
+          </li>
+        </ul>
+    </div>
+        
+    <div class="user-section">
+      <hr>   
+        <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+          <strong>User</strong>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-dark text-small shadow p-3" aria-labelledby="dropdownUser1">
+          <li><a class="dropdown-item" href="{% url 'password_change'  %}">Change Password</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li>
+            <a class="dropdown-item" href="{%url 'logout' %}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Logout</a>
+              <form id="logout-form" method="post" action="{% url 'logout' %}" style="display:none">
+                {% csrf_token %}
+              </form>
+          </li>
+        </ul>       
+    </div>
+  </div>
+<div class="content">
+    <div class="container mt-4">
+      <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card h-100" style="background-color:rgb(52, 55, 55);">
+                <div class="card-body text-center">
+                    <h4 class="card-title text-white mb-3">
+                    <i class="fas fa-users me-2"></i>Employee Directory
+                    </h4>
+                    <h2 class="card-text text-white">{{total_employees}}</h2>
+                    <a href="{% url 'employee_list' %}" class="btn btn-dark mt-3">View Employees</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card h-100" style="background-color:rgb(52, 55, 55);">
+                <div class="card-body text-center">
+                    <h4 class="card-title text-white mb-3">
+                    <i class="fas fa-users me-2"></i>Manage Employees
+                    </h4>
+                    <a href="/admin/" class="btn btn-dark mt-5">Manage</a>
+                </div>
+            </div>
+        </div>
+      </div>
+    </div>
+</div>
+
+{% endblock content %}

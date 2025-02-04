@@ -6,9 +6,125 @@
     <title>Manage Leaves</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
 
+    <style>
+        
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 225px;
+            background-color: #343a40; 
+            padding-top: 20px;
+            display:flex;
+            flex-direction:column;
+            justify-content:space-between;
+        }
+
+        .sidebar .nav-link {
+            color: #ffffff;
+            font-size: 18px;
+            padding: 10px 20px;
+            display: block;
+            transition: 0.3s;
+        }
+
+        .sidebar .nav-link:hover {
+            background-color: #495057;
+        }
+
+        .sidebar .nav-link.active {
+            background-color: #007bff;
+            font-weight: bold;
+        }
+
+        .user-section{
+            margin-top:auto;
+            padding-top: 1rem;
+        }
+        .user-section a{
+            color:white;
+            text-decoration:none;
+            font-size:16px;
+            display:bock;
+            padding: 5px 0;
+        }
+
+        
+        .content {
+            margin-left: 225px;
+            padding: 3px;
+            margin-top:70px;
+            padding-top:20px;
+        }
+        .page-header{
+            text-align:center;
+            background-color:rgb(106, 178, 178);
+            color:white;
+            margin-left: 225px;
+            margin-bottom:15px;
+            padding:13px;
+            box-shadow: 0 6px 2px -2px rgba(0, 0, 0, 0.2);
+            
+        }
+
+
+    </style>
 </head>
 <body>
-    <h2>Manage Leave Requests</h2>
+    <div class="sidebar text-white bg-dark p-3">
+        <div class="sidebar-content">
+            <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+                <span class="fs-4">Menu</span>
+            </a>
+
+            <hr>
+            <ul class="nav nav-pills flex-column mb-auto">
+            <li class="nav-item">
+                <a href="\" class="nav-link" aria-current="page">
+                {% comment %} <svg class="bi me-2" width="16" height="16"><use xlink:href="#home"/></svg> {% endcomment %}
+                Dashboard
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="/admin/" class="nav-link text-white">
+                {% comment %} <svg class="bi me-2" width="16" height="16"><use xlink:href="#table"/></svg> {% endcomment %}
+                Employee Section
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'manage_leaves' %}" class="nav-link text-white active">
+                {% comment %} <svg class="bi me-2" width="16" height="16"><use xlink:href="#grid"/></svg> {% endcomment %}
+                Leaves Section
+                </a>
+            </li>
+            </ul>
+        </div>
+        
+        <div class="user-section">
+            <hr>
+            <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+              {% comment %} <img src="https://github.com/mdo.png" alt="" width="32" height="32" class="rounded-circle me-2"> {% endcomment %}
+              <strong class="align-items-center">User</strong>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-dark text-small shadow p-3" aria-labelledby="dropdownUser1">
+              <li><a class="dropdown-item" href="{% url 'password_change'  %}">Change Password</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li>
+                  <a class="dropdown-item" href="{%url 'logout' %}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Logout</a>
+                  <form id="logout-form" method="post" action="{% url 'logout' %}" style="display:none">
+                      {% csrf_token %}
+                  </form>
+              </li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="page-header fixed-top"><h2>Manage Leave Requests</h2></div>
+    <div class="content">
+        
+    
     <form action="" method="get" class="sort-form" id="filter-form">
         <label for="employee_name" class="form-label" >Search by Employee:</label>
         <input type="text" name="employee_name" value="{{filters.employee_name}}" placeholder="search employee" oninput="debounceSubmit('filter-form')">
@@ -35,7 +151,7 @@
             <option value="status" {% if filters.sort_by == 'status' %}selected{% endif %}>Status</option>
         </select>
     </form>
-<div class="table-responsive">
+<div class="table-responsive pt-3">
     <table border="1" class="table table-striped table-bordered table-hover" >
         <caption>List of Leave Applications</caption>
         <thead class="table-dark">
@@ -76,6 +192,7 @@
         {% endfor %}
     </tbody> 
     </table>
+</div>
 </div>
 <script>
     let debounceTimeout;

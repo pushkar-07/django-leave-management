@@ -10,7 +10,8 @@ from django.contrib.auth.models import User
 @admin.register(Employee)
 class EmployeeAdmin(admin.ModelAdmin):
     list_display=('first_name','last_name','email','department','designation')
-    lis_filter=('is_active',)
+    list_filter=('is_active',)
+    
     def save_model(self,request,obj,form,change):
         #checking if the employee was previously inactive(deleted)
         was_inactive =False
@@ -43,8 +44,13 @@ class EmployeeAdmin(admin.ModelAdmin):
                 user.set_password(password)
                 user.save()
                 self.send_password_email(obj.email,password)
+            #linking back to leave applications if any present    
+            LeaveApplication.objects.filter(
+                employee_email=obj.email,
+                employee=None
+            ).update(employee=user)
 
-        obj.is_active= True
+        obj.is_active = True
         super().save_model(request,obj,form,change)
 
     def delete_model(self, request, obj):
@@ -52,7 +58,9 @@ class EmployeeAdmin(admin.ModelAdmin):
             user = User.objects.filter(email=obj.email).first()
             if user:
                 user.is_active =False
+                user.set_unusable_password()
                 user.save()
+            LeaveApplication.objects.filter(employee=obj,status__in=['Pending'].update(status='Cancelled'))    
         except Exception as e:
             print(f"Error deactivating user: {e}")
             
@@ -61,9 +69,22 @@ class EmployeeAdmin(admin.ModelAdmin):
         #     leave.employee_name=f"{obj.first_name} {obj.last_name}"
         #     leave.employee_email=obj.email
         #     leave.save()
-        obj.is_active=False    
+        obj.is_active = False    
         obj.save()
+
+        # LeaveApplication.objects.filter(
+        #     employee=obj,
+        #     status__in=['Pending']
+        # ).update(status='Cancelled')
         
+        # LeaveApplication.objects.filter(
+        #     employee=user
+        # ).update(
+        #     employee_name=f"{obj.first_name} {obj.last_name}",
+        #     employee_email=obj.email,
+        #     employee=None,
+        #     status='Cancelled'
+        # )
 
     def generate_random_password(self):
         return ''.join(random.choices(string.ascii_letters + string.digits, k=8))
