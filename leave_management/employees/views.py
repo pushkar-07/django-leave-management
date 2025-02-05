@@ -1,7 +1,7 @@
 import pandas as pd
 from django.shortcuts import render,get_object_or_404,redirect
 from .models import Employee,LeaveApplication,BonusClaim
-from .forms import LeaveApplicationForm,CustomAuthenticationForm
+from .forms import LeaveApplicationForm,CustomAuthenticationForm,BankDetailsForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.views import LoginView
@@ -10,6 +10,8 @@ from django.conf import settings
 from django.db.models import Q
 from django.contrib.auth.models import User
 from django.contrib import messages
+from django.utils import timezone
+from django.views.decorators.http import require_POST
 
 # Create your views here.
 
@@ -75,23 +77,7 @@ def apply_leave(request):
     else:
         form = LeaveApplicationForm()
     return render(request,'employees/apply_leave.html',{'form':form})
-    # if request.method == 'POST':
-    #     form = LeaveApplicationForm(request.POST)
-    #     employee =Employee.objects.filter(email=request.user.email).first()
 
-    #     if employee and employee.leave_balance <= 0:
-    #         messages.error(request,"Insufficient leave balance. cannot apply for leave.")
-    #         return render(request,'employees/apply_leave.html',{'form':form})
-        
-    #     if form.is_valid():
-    #         leave = form.save(commit=False)
-    #         leave.employee =request.user
-    #         leave.employee_email = request.user.email
-    #         leave.save()
-    #         return redirect('leave_status')
-    # else:
-    #     form =LeaveApplicationForm()
-    # return render(request,'employees/apply_leave.html',{'form':form})
 
 @login_required
 def leave_status(request):
@@ -228,45 +214,197 @@ class EmployeeLoginView(LoginView):
             self.request.session.set_expiry(0)
         return super().form_valid(form)
 
+
+@login_required
+def update_bank_details(request):
+    try:
+        employee= Employee.objects.get(email=request.user.email)
+    except Employee.DoesNotExist:
+        messages.error(request,"Employee profile not found.")
+        return redirect('dashboard')
+    if request.method == 'POST':
+        form = BankDetailsForm(request.POST,instance=employee)
+        if form.is_valid():
+            form.save()
+            messages.success(request,"Bank details updated successfully!")
+            return redirect('bonus_dashboard')
+    else:
+            form = BankDetailsForm(instance=employee)
+    return render(request,'employees/update_bank_details.html',{'form':form})
+
+@login_required
+def bonus_dashboard(request):
+    try:
+        employee=Employee.objects.get(email=request.user.email)
+        claims = BonusClaim.objects.filter(employee=employee).order_by('-created_at')
+
+        context={
+            'employee': employee,
+            'claims': claims,
+            'has_bank_details': all([
+                employee.bank_account_number,
+                employee.bank_name,
+                employee.ifsc_code
+            ])
+        }
+        return render(request,'employees/bonus_dashboard.html',context)
+    except Employee.DoesNotExist:
+        messages.error(request,"Employee profile not found.")
+        return redirect('dashboard')
+
+
+@staff_member_required
+@require_POST
+def calculate_all_bonuses(request):
+    employees = Employee.objects.filter(is_active=True)
+    processed_count = 0
+    
+    for employee in employees:
+        if employee.leave_balance > 22:
+            bonus = employee.calculate_bonus()
+            if bonus > 0:
+                processed_count += 1
+                
+    messages.success(request, f"Processed bonus calculation for {processed_count} employees.")
+    return redirect('admin_dashboard')
+
 @login_required
 def claim_bonus(request):
-    employee = request.user.employee
-    if employee.bonus_amount > 0:
-        claim=BonusClaim.objects.create(employee=employee,amount=employee.bonus_amount)
-        employee.bonus_amount = 0
-        employee.save()
-        return redirect('bonus_success')
-    return render(request,'employees/no_bonus.html')
+    if request.method != 'POST':
+        messages.error(request,"Invalid request method.")
+        return redirect('bonus_dashboard')
+    
+    try:
+        employee = Employee.objects.get(email=request.user.email)
+        if not employee.is_active:
+            messages.error(request,"You are no longer active in the system.")
+            return redirect('bonus_dashboard')
+        
+        if not all([employee.bank_account_number,
+                employee.bank_name,
+                employee.ifsc_code]):
+            messages.warning(request,"Please update your bank details first.")
+            return redirect('update_bank_details')
+        
+        if employee.bonus_amount <= 0:
+            messages.warning(request, "No bonus amount available for claiming.")
+            return redirect('bonus_dashboard')
 
-def leave_analytics(request):
-    # Fetch leave applications and convert them into a DataFrame
-    leaves = LeaveApplication.objects.all().values()
-    df = pd.DataFrame(list(leaves))
+        # Check if there's already a pending claim
+        pending_claim = BonusClaim.objects.filter(
+            employee=employee,
+            status='Pending'
+        ).exists()
 
-    # If there are no leave applications, return an empty response
-    if df.empty:
-        return render(request, "employees/analytics.html", {"message": "No leave data available yet."})
+        if pending_claim:
+            messages.warning(request, "You already have a pending bonus claim.")
+            return redirect('bonus_dashboard')
+        
+        claim = BonusClaim.objects.create(
+            employee=employee,
+            amount=employee.bonus_amount
+        )
+        messages.success(request, f"Bonus claim of ₹{employee.bonus_amount} submitted successfully!")
+        return redirect('bonus_dashboard')
+    
+    except Employee.DoesNotExist:
+        messages.error(request,"Employee profile not found.")
+        return redirect('dashboard')
+    except Exception as e:
+        messages.error(request, f"An error occurred: {str(e)}")
+        return redirect('bonus_dashboard')
 
-    # Convert datetime fields
-    df['leave_date'] = pd.to_datetime(df['leave_date'])
 
-    # Leave trend analysis
-    leave_trends = df.groupby(df['leave_date'].dt.month)['id'].count().to_dict()  # Leaves per month
+@staff_member_required
+def manage_bonus_claims(request):
+    claims = BonusClaim.objects.all().order_by('-created_at')
+    return render(request,'employees/manage_bonus_claims.html',{'claims':claims})
 
-    # Employee-wise leave count
-    employee_leave_count = df['employee_id'].value_counts().to_dict()
+@staff_member_required
+def process_bonus_claim(request,claim_id):
+    claim=get_object_or_404(BonusClaim,id=claim_id)
 
-    # Department-wise leave count
-    employees = Employee.objects.all().values("id", "department")
-    emp_df = pd.DataFrame(list(employees))
-    merged_df = df.merge(emp_df, left_on="employee_id", right_on="id")
-    department_leave_count = merged_df.groupby("department")["id_x"].count().to_dict()
+    if request.method == 'POST':
+        status = request.POST.get('status')
+        remarks = request.POST.get('remarks')
+        transaction_id = request.POST.get('transaction_id')
 
-    # Data to send to frontend
-    analytics_data = {
-        "leave_trends": leave_trends,
-        "employee_leave_count": employee_leave_count,
-        "department_leave_count": department_leave_count,
-    }
+        if status == 'Paid' and not transaction_id:
+            messages.error(request, "Transaction ID is required for paid claims.")
+            return render(request, 'employees/process_bonus_claim.html', {'claim': claim})
+        claim.status = status
+        claim.admin_remarks = remarks
+        claim.transaction_id = transaction_id
+        claim.processed_at = timezone.now()
+        claim.save()
 
-    return render(request, "employees/analytics.html", analytics_data)
+        # Sending email notification
+        subject = f"Bonus Claim Status Update: {status}"
+        message = f"""
+        Dear {claim.employee.first_name},
+        
+        Your bonus claim of ₹{claim.amount} has been {status.lower()}.
+        
+        Remarks: {remarks}
+        {f'Transaction ID: {transaction_id}' if transaction_id else ''}
+        
+        Best regards,
+        HR Team
+        """
+        
+        send_mail(
+            subject,
+            message,
+            settings.EMAIL_HOST_USER,
+            [claim.employee.email],
+            fail_silently=False
+        )
+        
+        messages.success(request, f"Bonus claim {status.lower()} successfully.")
+        return redirect('manage_bonus_claims')
+        
+    return render(request, 'employees/process_bonus_claim.html', {'claim': claim})
+
+@login_required
+def withdraw_bonus(request,claim_id):
+    try:
+        claim = get_object_or_404(BonusClaim,id=claim_id)
+
+        #Verify claim belongs to logged in employee
+        if claim.employee.email != request.user.email:
+            messages.error(request,"Unauthorized access.")
+            return redirect('bonus_dashboard')
+        
+        #verify claim is in approved statuss
+        if claim.status != 'Approved':
+            messages.error(request,"Only approved claims can be withdrawn.")
+            return redirect('bonus_dashboard')
+         # update claim status to paid
+        claim.status='Paid'
+        claim.processed_at = timezone.now()
+        claim.save()
+
+        messages.success(request,"Bonus withdrawn successfully!")
+
+        # sending email
+        subject="Bonus Withdrawal Confirmation"
+        message= f"""
+        Dear {claim.employee.first_name},
+
+        Your bonus withdrawal of Rs.{claim.amount} has been proccessed successfully.
+
+        Best regards,
+        HR Team
+        """
+        send_mail(
+            subject,
+            message,
+            settings.EMAIL_HOST_USER,
+            [claim.employee.email],
+            fail_silently=False
+        )
+    except Exception as e:
+        messages.error(request,f"An error occured: {str(e)}")
+    
+    return redirect('bonus_dashboard')
+

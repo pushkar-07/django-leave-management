@@ -1,6 +1,0 @@
-{% if user.employee.bonus_amount > 0 %}
-    <p>You have a bonus of ${{ user.employee.bonus_amount }} available.</p>
-    <a href="{% url 'claim_bonus' %}" class="btn btn-success">Claim Bonus</a>
-{% else %}
-    <p>No bonus available.</p>
-{% endif %}

@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
+from decimal import Decimal
+
 # Create your models here.
 class Employee(models.Model):
     first_name = models.CharField(max_length=50)
@@ -12,21 +14,25 @@ class Employee(models.Model):
     leave_balance=models.IntegerField(default=2)
     is_active=models.BooleanField(default=True)
     bonus_amount=models.DecimalField(max_digits=10, decimal_places=2,default=0.0)
+    bank_account_number=models.CharField(max_length=50,blank=True,null=True)
+    bank_name=models.CharField(max_length=100,blank=True,null=True)
+    ifsc_code=models.CharField(max_length=20,blank=True,null=True)
     # supervisor = models.ForeignKey('self',null=True,blank=True,on_delete=models.SET_NULL)
 
     def calculate_bonus(self):
-        """Convert extra leaves (above 16) into money."""
-        if self.leave_balance > 16:
-            extra_leaves=self.leave_balance-16
-            bonus_per_leave = 500
-            self.bonus_amount = extra_leaves * bonus_per_leave
-        else:
-            self.bonus_amount = 0
-        self.save()
+        """Convert extra leaves (above 22) into money."""
+        if self.leave_balance > 22:
+            extra_leaves=self.leave_balance-22
+            bonus_per_leave = Decimal('500.00')
+            self.bonus_amount += (extra_leaves * bonus_per_leave)
+            self.leave_balance=22
+            self.save()
+            return self.bonus_amount
+        return Decimal('0.00')
 
-    def __str__(self):
-        return f"{self.first_name} {self.last_name}"
-    
+    def update_annual_leaves(self):
+        """Method to be called annually to process leave conversion"""
+        return self.calculate_bonus()    
 
 class LeaveApplication(models.Model):
     LEAVE_TYPES = [
@@ -83,10 +89,36 @@ class LeaveApplication(models.Model):
         return f"{self.employee.username or 'Unknown Employee'} - {self.leave_type} ({self.status})"
 
 class BonusClaim(models.Model):
-    employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE,related_name='bonus_claim')
     amount =models.DecimalField(max_digits=10,decimal_places=2)
-    status=models.CharField(max_length=20,choices=[('Pending','Pending'),('Approved','Approved'),('Rejected','Rejected')],default='Pending')
+    status=models.CharField(max_length=20,choices=[('Pending','Pending'),('Approved','Approved'),('Rejected','Rejected'),('Paid','Paid')],default='Pending')
     created_at = models.DateTimeField(auto_now_add=True)
+    processed_at = models.TextField(blank=True,null=True)
+    admin_remarks = models.CharField(max_length=100,blank=True,null=True)
+    transaction_id=models.CharField(max_length=100,blank=True,null=True)
+    original_leave_balance = models.IntegerField(null=True,blank=True)
 
     def __str__(self):
-        return f"{self.employee.user.first_name} - {self.amount} - {self.status}"
+        return f"{self.employee.first_name} - ₹{self.amount} - {self.status}"
+    
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            self.original_leave_balance = self.employee.leave_balance
+        if self.pk:
+            # Get the original object before changes
+            orig = BonusClaim.objects.get(pk=self.pk)
+            #if status changed to rejected
+            if orig.status != 'Rejected' and self.status == 'Rejected':
+                #restoring original leave balance
+                self.employee.leave_balance = self.original_leave_balance
+                self.employee.bonus_amount = Decimal('0.00')
+                self.employee.save()
+
+            # If status is changed to paid
+            elif orig.status != 'Paid' and self.status == 'Paid':
+                # Reset employee's bonus amount to 0 only after payment
+                self.employee.bonus_amount = Decimal('0.00')
+                self.employee.save()
+                
+        super().save(*args, **kwargs)
+

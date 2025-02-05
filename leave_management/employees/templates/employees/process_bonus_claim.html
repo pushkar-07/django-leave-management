@@ -1,0 +1,43 @@
+{% extends 'homepage.html' %}
+{% block title %}Process Bonus Claims{% endblock title %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Process Bonus Claim</h2>
+    
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5>Claim Details</h5>
+            <p><strong>Employee:</strong> {{ claim.employee.first_name }} {{ claim.employee.last_name }}</p>
+            <p><strong>Amount:</strong> ₹{{ claim.amount }}</p>
+            <p><strong>Bank Account:</strong> {{ claim.employee.bank_account_number }}</p>
+            <p><strong>Bank Name:</strong> {{ claim.employee.bank_name }}</p>
+            <p><strong>IFSC Code:</strong> {{ claim.employee.ifsc_code }}</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select" required>
+                        <option value="Approved">Approve</option>
+                        <option value="Rejected">Reject</option>
+                        <option value="Paid">Mark as Paid</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Transaction ID</label>
+                    <input type="text" name="transaction_id" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Remarks</label>
+                    <textarea name="remarks" class="form-control" rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

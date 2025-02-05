@@ -18,7 +18,6 @@
           </li>
 
           <li class="nav-item mt-2">
-            {% comment %} <a href="/admin/" class="nav-link text-white"> {% endcomment %}
             <a href="{% url 'employee_section' %}" class="nav-link text-white">
               Employee Section
             </a>
@@ -26,6 +25,11 @@
           <li class="nav-item mt-2">
             <a href="{% url 'manage_leaves' %}" class="nav-link text-white">
               Leaves Section
+            </a>
+          </li>
+          <li class="nav-item mt-2">
+            <a href="{% url 'manage_bonus_claims' %}" class="nav-link text-white">
+              Manage Bonus Claims
             </a>
           </li>
         </ul>
@@ -106,4 +110,17 @@
       </div>
     </div>
   </div>
+
+  <!-- Add this where you want the button to appear -->
+<div class="card mb-4">
+  <div class="card-body">
+      <h5 class="card-title">Bonus Management</h5>
+      <form action="{% url 'calculate_all_bonuses' %}" method="post" class="d-inline">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-primary" onclick="return confirm('Are you sure you want to calculate bonuses for all employees?')">
+              Calculate All Employee Bonuses
+          </button>
+      </form>
+  </div>
+</div>
 {% endblock content %}

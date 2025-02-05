@@ -7,9 +7,9 @@
     <h2 class="text-center">Claim Your Leave Bonus</h2>
     
     <div class="card p-4 shadow-lg mt-4">
-        {% if user.employee.bonus_amount > 0 %}
+        {% if employee.bonus_amount > 0 %}
             <p class="lead text-success">
-                🎉 You have a bonus of <strong>${{ user.employee.bonus_amount }}</strong> available.
+                🎉 You have a bonus of <strong>${{ employee.bonus_amount }}</strong> available.
             </p>
             <form method="POST" action="{% url 'claim_bonus' %}">
                 {% csrf_token %}

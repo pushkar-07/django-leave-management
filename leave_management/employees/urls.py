@@ -25,7 +25,12 @@ urlpatterns = [
     path('admin-dashboard/',views.admin_dashboard,name='admin_dashboard'),
     path('employee-section/',views.employee_section,name='employee_section'),
     path('claim-bonus/',views.claim_bonus,name='claim_bonus'),
-    path('analytics/',views.leave_analytics,name='leave_analytics'),
+    path('bonus-dashboard/',views.bonus_dashboard,name='bonus_dashboard'),
+    path('update-bank-details/',views.update_bank_details,name='update_bank_details'),
+    path('calculate-all-bonuses/',views.calculate_all_bonuses,name='calculate_all_bonuses'),
+    path('manage-bonus-claims/',views.manage_bonus_claims,name='manage_bonus_claims'),
+    path('process-bonus-claim/<int:claim_id>/',views.process_bonus_claim,name='process_bonus_claim'),
+    path('withdraw-bonus/<int:claim_id>/',views.withdraw_bonus,name='withdraw_bonus'),
 ]
 
 

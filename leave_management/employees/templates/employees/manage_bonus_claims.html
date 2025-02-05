@@ -1,0 +1,40 @@
+{% extends 'homepage.html' %}
+{% block title %}Manage Bonus Claims{% endblock title %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Manage Bonus Claims</h2>
+    
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Employee</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for claim in claims %}
+                <tr>
+                    <td>{{ claim.employee.first_name }} {{ claim.employee.last_name }}</td>
+                    <td>₹{{ claim.amount }}</td>
+                    <td>{{ claim.status }}</td>
+                    <td>{{ claim.created_at|date:"d-M-Y" }}</td>
+                    <td>
+                        {% if claim.status == 'Pending' %}
+                        <a href="{% url 'process_bonus_claim' claim.id %}" class="btn btn-sm btn-primary">Process</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center">No claims found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
