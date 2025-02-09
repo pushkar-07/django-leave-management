@@ -1,8 +1,49 @@
 {% extends "homepage.html" %}
+
 {% block title %}Admin Dashboard{% endblock title %}
+
+
 {% block content %}
 
-<div class="page-header fixed-top"><h2>Admin Dashboard</h2></div>
+<div class="page-header fixed-top d-flex justify-content-between align-items-center px-4">
+  <h2>Admin Dashboard</h2>
+      
+      <div class="dropdown">
+        <button class="btn btn-link position-relative" type="button" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fas fa-bell text-dark fs-4"></i>
+            {% if notifications %}
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                    {{ notifications|length }}
+                </span>
+            {% endif %}
+        </button>
+        
+        <div class="dropdown-menu dropdown-menu-end p-0 notification-dropdown" aria-labelledby="notificationDropdown" style="width: 300px; max-height: 400px; overflow-y: auto;">
+            <div class="p-2 border-bottom">
+                <h6 class="mb-0">Notifications</h6>
+            </div>
+            <div class="notification-list">
+                {% for notification in notifications %}
+                    <div class="notification-item d-flex justify-content-between align-items-center p-3 border-bottom {% if not notification.is_read %}bg-light{% endif %}">
+                        <div class="notification-content pe-2">
+                            <p class="mb-1 small">{{notification.message}}</p>
+                            <small class="text-muted">{{notification.created_at|date:"F d, Y H:i"}}</small>
+                        </div>
+                        <a href="{% url 'mark_notifications_as_read' notification.id %}" class="text-muted text-decoration-none close-notification">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    </div>
+                {% empty %}
+                    <div class="p-3 text-center text-muted">
+                        <p class="mb-0">No new notifications</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+</div>
+
 
 <div class="sidebar text-white bg-dark p-3">
     <div class="sidebar-content">
@@ -111,7 +152,7 @@
     </div>
   </div>
 
-  <!-- Add this where you want the button to appear -->
+  {% comment %} <!-- Add this where you want the button to appear -->
 <div class="card mb-4">
   <div class="card-body">
       <h5 class="card-title">Bonus Management</h5>
@@ -123,4 +164,6 @@
       </form>
   </div>
 </div>
-{% endblock content %}
+{% endcomment %}
+
+{% endblock content %} 

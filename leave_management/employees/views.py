@@ -1,6 +1,6 @@
 import pandas as pd
 from django.shortcuts import render,get_object_or_404,redirect
-from .models import Employee,LeaveApplication,BonusClaim
+from .models import Employee,LeaveApplication,BonusClaim,Notification
 from .forms import LeaveApplicationForm,CustomAuthenticationForm,BankDetailsForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
@@ -17,14 +17,25 @@ from django.views.decorators.http import require_POST
 
 @staff_member_required
 def admin_dashboard(request):
+    notifications = Notification.objects.filter(
+        recipient=request.user,is_read=False
+    )
     context={
     'total_requests':LeaveApplication.objects.count(),
     'pending_requests': LeaveApplication.objects.filter(status='Pending').count(),
     'approved_requests': LeaveApplication.objects.filter(status='Approved').count(),
     'rejected_requests': LeaveApplication.objects.filter(status='Rejected').count(),
     'total_employees':Employee.objects.filter(is_active=True).count(),
+    'notifications':notifications,
     }
     return render(request,'employees/admin_dashboard.html',context)
+
+@login_required
+def mark_notifications_as_read(request,notification_id):
+    notification =Notification.objects.get(id=notification_id,recipient=request.user)
+    notification.is_read = True
+    notification.save()
+    return redirect('admin_dashboard')
 
 @staff_member_required
 def employee_section(request):
@@ -69,6 +80,11 @@ def apply_leave(request):
                 # employee=Employee.objects.filter(email=request.user.email).first()
                 if employee.leave_balance > 0:
                     leave.save() #deducting the leave in the model's save method
+
+                    Notification.objects.create(
+                        recipient=User.objects.filter(is_staff=True).first(), # first admin user
+                        message=f"{request.user.get_full_name()} has applied for leave."
+                        )
                     return redirect('leave_status')
                 else:
                     form.add_error(None,"Insufficient leave balance.") 
@@ -138,7 +154,7 @@ def update_leave_status(request,leave_id):
             employee=Employee.objects.filter(email=leave.employee.email).first()
             if employee:
                 if status == 'Rejected':
-                    employee.leave_balance += 1
+                    # employee.leave_balance += 1 no need to deduct leave here it is already deducted in model's save method
                     employee.save()
                 elif status == 'Approved':
                     pass # leave already deducted during application , no need to deduct again
@@ -304,6 +320,10 @@ def claim_bonus(request):
             employee=employee,
             amount=employee.bonus_amount
         )
+        Notification.objects.create(
+            recipient=User.objects.filter(is_staff=True).first(),
+            message=f"{request.user.get_full_name()} has claimed a bonus of Rs.{employee.bonus_amount}"
+        )
         messages.success(request, f"Bonus claim of ₹{employee.bonus_amount} submitted successfully!")
         return redirect('bonus_dashboard')
     
@@ -332,11 +352,17 @@ def process_bonus_claim(request,claim_id):
         if status == 'Paid' and not transaction_id:
             messages.error(request, "Transaction ID is required for paid claims.")
             return render(request, 'employees/process_bonus_claim.html', {'claim': claim})
+        
         claim.status = status
         claim.admin_remarks = remarks
         claim.transaction_id = transaction_id
         claim.processed_at = timezone.now()
         claim.save()
+
+        Notification.objects.create(
+            recipient=claim.employee.user,
+            message=f"Your bpnus claim of Rs.{claim.amount} has been {status.lower()}."
+        )
 
         # Sending email notification
         subject = f"Bonus Claim Status Update: {status}"

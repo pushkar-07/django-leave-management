@@ -1,16 +1,17 @@
 {% extends 'homepage.html' %}
 {% block title %}Manage Bonus Claims{% endblock title %}
 {% block content %}
-<div class="container mt-4">
+<div class="header">
     <h2>Manage Bonus Claims</h2>
-    
+</div>
+<div class="container mt-4">  
     <div class="table-responsive">
-        <table class="table">
-            <thead>
+        <table border=1 class="table table-striped table-bordered table-hover">
+            <thead class="table-dark">
                 <tr>
                     <th>Employee</th>
                     <th>Amount</th>
-                    <th>Status</th>
+                    {% comment %} <th>Status</th> {% endcomment %}
                     <th>Date</th>
                     <th>Actions</th>
                 </tr>
@@ -20,12 +21,15 @@
                 <tr>
                     <td>{{ claim.employee.first_name }} {{ claim.employee.last_name }}</td>
                     <td>₹{{ claim.amount }}</td>
-                    <td>{{ claim.status }}</td>
+                    {% comment %} <td>{{ claim.status }}</td> {% endcomment %}
                     <td>{{ claim.created_at|date:"d-M-Y" }}</td>
                     <td>
                         {% if claim.status == 'Pending' %}
                         <a href="{% url 'process_bonus_claim' claim.id %}" class="btn btn-sm btn-primary">Process</a>
+                        {% else %}
+                        {{ claim.status }}
                         {% endif %}
+                        
                     </td>
                 </tr>
                 {% empty %}
@@ -36,5 +40,11 @@
             </tbody>
         </table>
     </div>
+    <a href="/" class="btn btn-dark">Dashboard</a>
 </div>
+
+
+
+
+
 {% endblock %}

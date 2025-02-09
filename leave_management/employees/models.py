@@ -63,25 +63,34 @@ class LeaveApplication(models.Model):
     applied_date=models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
-        if not self.pk and LeaveApplication.objects.filter(employee=self.employee,leave_date=self.leave_date).exists():
-            raise ValueError("Leave application already exists for this date.")
-        if self.pk:
-           original = LeaveApplication.objects.get(pk=self.pk)
-           if original.status == 'Pending' and self.status == 'Rejected': #rejection case
-               #crediting leaves back
-               employee = Employee.objects.filter(email=self.employee.email).first()
-               if employee:
-                   employee.leave_balance += 1
-                   employee.save()
-        else:
-            # deduct leaves if status is pending
+        if not self.pk:  # If this is a new application
+        # Check for existing active leave applications
+            existing_leave = LeaveApplication.objects.filter(
+                employee=self.employee,
+                leave_date=self.leave_date,
+                status__in=['Pending', 'Approved']  # Only check for active leaves
+            ).exists()
+            if existing_leave:
+                raise ValueError("An active leave application already exists for this date.")
+        # deduct leaves if status is pending for new application
             if self.status == 'Pending':
-                employee=Employee.objects.filter(email=self.employee_email).first()
+                employee = Employee.objects.filter(email=self.employee_email).first()
                 if employee and employee.leave_balance > 0:
                     employee.leave_balance -= 1
                     employee.save()
                 else:
                     raise ValueError("Insufficient leave balance. Cannot apply for leave.")
+        else:
+        # This is an existing application being updated
+            original = LeaveApplication.objects.get(pk=self.pk)
+            if original.status == 'Pending' and self.status == 'Rejected':  # rejection case
+            # crediting leaves back
+                employee = Employee.objects.filter(email=self.employee.email).first()
+                if employee:
+                    if original.status == 'Pending':
+                        employee.leave_balance += 1
+                        employee.save()
+
         super().save(*args, **kwargs)
     
 
@@ -122,3 +131,11 @@ class BonusClaim(models.Model):
                 
         super().save(*args, **kwargs)
 
+class Notification(models.Model):
+    recipient = models.ForeignKey(User,on_delete=models.CASCADE) # admin who receives the notificatoin
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Notification for {self.recipient.username}: {self.message}"

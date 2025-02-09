@@ -31,6 +31,7 @@ urlpatterns = [
     path('manage-bonus-claims/',views.manage_bonus_claims,name='manage_bonus_claims'),
     path('process-bonus-claim/<int:claim_id>/',views.process_bonus_claim,name='process_bonus_claim'),
     path('withdraw-bonus/<int:claim_id>/',views.withdraw_bonus,name='withdraw_bonus'),
+    path('mark-notification/<int:notification_id>/',views.mark_notifications_as_read,name='mark_notifications_as_read'),
 ]
 
 

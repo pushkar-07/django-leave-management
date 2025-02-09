@@ -20,7 +20,6 @@ Employee Section
           </li>
 
           <li class="nav-item mt-2">
-            {% comment %} <a href="/admin/" class="nav-link text-white"> {% endcomment %}
             <a href="{% url 'employee_section' %}" class="nav-link text-white active">
               Employee Section
             </a>
@@ -28,6 +27,11 @@ Employee Section
           <li class="nav-item mt-2">
             <a href="{% url 'manage_leaves' %}" class="nav-link text-white">
               Leaves Section
+            </a>
+          </li>
+          <li class="nav-item mt-2">
+            <a href="{% url 'manage_bonus_claims' %}" class="nav-link text-white">
+              Manage Bonus Claims
             </a>
           </li>
         </ul>
