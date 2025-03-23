@@ -1,0 +1,11 @@
+Django==5.1.4
+asgiref==3.8.1
+sqlparse==0.5.3
+django-timezone-field==7.1
+python-decouple==3.8
+pytz==2025.1
+tzdata==2025.1
+celery==5.4.0
+django-celery-beat==2.7.0
+redis==5.2.1
+kombu==5.5.0
