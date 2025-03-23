@@ -12,6 +12,7 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.utils import timezone
 from django.views.decorators.http import require_POST
+from decimal import Decimal
 
 # Create your views here.
 
@@ -35,7 +36,10 @@ def mark_notifications_as_read(request,notification_id):
     notification =Notification.objects.get(id=notification_id,recipient=request.user)
     notification.is_read = True
     notification.save()
-    return redirect('admin_dashboard')
+    if request.user.is_staff:
+        return redirect('admin_dashboard')  # Redirect admin users
+    else:
+        return redirect('dashboard')  # Redirect employees
 
 @staff_member_required
 def employee_section(request):
@@ -46,11 +50,24 @@ def employee_section(request):
 def dashboard(request):
     if request.user.is_staff:
         return redirect('admin_dashboard')
-    return render(request,'employees/dashboard.html')
+    notifications = Notification.objects.filter(
+        recipient=request.user,is_read=False
+    )
+    employee=Employee.objects.get(email=request.user.email)
+    context={
+    'employee':employee,
+    'total_requests':LeaveApplication.objects.filter(employee=request.user).count(),
+    'notifications':notifications,
+    }
+    return render(request,'employees/dashboard.html',context)
 
 @staff_member_required
 def employee_list(request):
     employees = Employee.objects.all()
+    employee_name=request.GET.get('employee_name','').strip()
+    if employee_name:
+        employees=employees.filter(Q(first_name__icontains=employee_name)|Q(last_name__icontains=employee_name))
+
     return render(request,'employees/employee_list.html',{'employees':employees})
 
 @staff_member_required
@@ -142,23 +159,26 @@ def manage_leaves(request):
 @staff_member_required
 def update_leave_status(request,leave_id):
     leave=LeaveApplication.objects.get(id=leave_id)
+    employee=leave.employee
     if request.method=='POST':
         admin_reason=request.POST.get('admin_reason')
         status=request.POST.get('status')
-        previous_status = leave.status
+        # previous_status = leave.status
         leave.status=status
         leave.admin_reason=admin_reason
         leave.save()
-
-        if previous_status != status:
-            employee=Employee.objects.filter(email=leave.employee.email).first()
-            if employee:
-                if status == 'Rejected':
-                    # employee.leave_balance += 1 no need to deduct leave here it is already deducted in model's save method
-                    employee.save()
-                elif status == 'Approved':
-                    pass # leave already deducted during application , no need to deduct again
-
+        # Notify the employee
+        user = User.objects.filter(email=employee.email).first()
+        if user:
+            Notification.objects.create(
+                recipient=user,
+                message=f"Your leave request has been {status.lower()}."
+            )
+        # # marking notification as read
+        Notification.objects.filter(
+            recipient=request.user,
+            message__icontains=leave.employee.get_full_name()).update(is_read=True)
+    
 #sending email
         subject=f"Your Leave Application Status: {status}"
         message=f"""
@@ -269,168 +289,202 @@ def bonus_dashboard(request):
         return redirect('dashboard')
 
 
-@staff_member_required
-@require_POST
-def calculate_all_bonuses(request):
-    employees = Employee.objects.filter(is_active=True)
-    processed_count = 0
-    
-    for employee in employees:
+# Utility function to check if a user is an admin
+def is_admin(user):
+    return user.is_staff
+@login_required
+def calculate_bonus(request):
+    try:
+        employee = Employee.objects.get(email=request.user.email)
+
         if employee.leave_balance > 22:
-            bonus = employee.calculate_bonus()
-            if bonus > 0:
-                processed_count += 1
-                
-    messages.success(request, f"Processed bonus calculation for {processed_count} employees.")
-    return redirect('admin_dashboard')
+            extra_leaves = employee.leave_balance - 22
+            bonus_per_leave = Decimal('500.00')
+            employee.bonus_amount = extra_leaves * bonus_per_leave
+        else:
+            employee.bonus_amount = Decimal('0.00')
+
+        employee.save()
+        messages.success(request, "Bonus calculated successfully!")
+    
+    except Employee.DoesNotExist:
+        messages.error(request, "Employee profile not found.")
+
+    return redirect('bonus_dashboard')
 
 @login_required
 def claim_bonus(request):
     if request.method != 'POST':
-        messages.error(request,"Invalid request method.")
+        messages.error(request, "Invalid request method.")
         return redirect('bonus_dashboard')
-    
+
     try:
         employee = Employee.objects.get(email=request.user.email)
         if not employee.is_active:
-            messages.error(request,"You are no longer active in the system.")
+            messages.error(request, "You are no longer active in the system.")
             return redirect('bonus_dashboard')
-        
-        if not all([employee.bank_account_number,
-                employee.bank_name,
-                employee.ifsc_code]):
-            messages.warning(request,"Please update your bank details first.")
+
+        if not all([employee.bank_account_number, employee.bank_name, employee.ifsc_code]):
+            messages.warning(request, "Please update your bank details first.")
             return redirect('update_bank_details')
-        
+
         if employee.bonus_amount <= 0:
             messages.warning(request, "No bonus amount available for claiming.")
             return redirect('bonus_dashboard')
 
-        # Check if there's already a pending claim
-        pending_claim = BonusClaim.objects.filter(
+        # Check if there's already a pending or approved claim
+        existing_claim = BonusClaim.objects.filter(
             employee=employee,
-            status='Pending'
+            status__in=['Pending', 'Approved']
         ).exists()
 
-        if pending_claim:
-            messages.warning(request, "You already have a pending bonus claim.")
+        if existing_claim:
+            messages.warning(request, "You already have a pending or approved bonus claim.")
             return redirect('bonus_dashboard')
-        
+
         claim = BonusClaim.objects.create(
             employee=employee,
             amount=employee.bonus_amount
         )
-        Notification.objects.create(
-            recipient=User.objects.filter(is_staff=True).first(),
-            message=f"{request.user.get_full_name()} has claimed a bonus of Rs.{employee.bonus_amount}"
-        )
+
+        # Notify all admins
+        admins = User.objects.filter(is_staff=True)
+        for admin in admins:
+            Notification.objects.create(
+                recipient=admin,
+                message=f"{request.user.get_full_name()} has claimed a bonus of ₹{employee.bonus_amount}"
+            )
+
         messages.success(request, f"Bonus claim of ₹{employee.bonus_amount} submitted successfully!")
         return redirect('bonus_dashboard')
-    
+
     except Employee.DoesNotExist:
-        messages.error(request,"Employee profile not found.")
+        messages.error(request, "Employee profile not found.")
         return redirect('dashboard')
     except Exception as e:
         messages.error(request, f"An error occurred: {str(e)}")
         return redirect('bonus_dashboard')
 
-
 @staff_member_required
 def manage_bonus_claims(request):
     claims = BonusClaim.objects.all().order_by('-created_at')
-    return render(request,'employees/manage_bonus_claims.html',{'claims':claims})
+    return render(request, 'employees/manage_bonus_claims.html', {'claims': claims})
 
 @staff_member_required
-def process_bonus_claim(request,claim_id):
-    claim=get_object_or_404(BonusClaim,id=claim_id)
+
+def process_bonus_claim(request, claim_id):
+    claim = get_object_or_404(BonusClaim, id=claim_id)
+    employee = claim.employee
 
     if request.method == 'POST':
         status = request.POST.get('status')
-        remarks = request.POST.get('remarks')
-        transaction_id = request.POST.get('transaction_id')
+        remarks = request.POST.get('remarks', '').strip()
 
-        if status == 'Paid' and not transaction_id:
-            messages.error(request, "Transaction ID is required for paid claims.")
-            return render(request, 'employees/process_bonus_claim.html', {'claim': claim})
-        
+        # Update claim status
         claim.status = status
         claim.admin_remarks = remarks
-        claim.transaction_id = transaction_id
         claim.processed_at = timezone.now()
         claim.save()
 
-        Notification.objects.create(
-            recipient=claim.employee.user,
-            message=f"Your bpnus claim of Rs.{claim.amount} has been {status.lower()}."
-        )
+        # ✅ Reset leave balance & bonus amount only when approved
+        if status == 'Approved':
+            employee.leave_balance = 22  # Reset to threshold value
+            # employee.bonus_amount = Decimal('0.00')  # Reset bonus amount
+            employee.save()
 
-        # Sending email notification
+        # ✅ When rejected, do nothing (leave balance & bonus remain unchanged)
+        
+        # Notify the employee
+        user = User.objects.filter(email=employee.email).first()
+        if user:
+            Notification.objects.create(
+                recipient=user,
+                message=f"Your bonus claim of ₹{claim.amount} has been {status.lower()}."
+            )
+
+        # Mark related admin notifications as read
+        Notification.objects.filter(
+            recipient__is_staff=True,
+            message__icontains=f"{employee.first_name} {employee.last_name}"
+        ).update(is_read=True)
+
+        # Send email notification to the employee
         subject = f"Bonus Claim Status Update: {status}"
         message = f"""
-        Dear {claim.employee.first_name},
-        
+        Dear {employee.first_name},
+
         Your bonus claim of ₹{claim.amount} has been {status.lower()}.
-        
-        Remarks: {remarks}
-        {f'Transaction ID: {transaction_id}' if transaction_id else ''}
-        
+
+        Remarks: {remarks if remarks else 'No remarks provided.'}
+
         Best regards,
         HR Team
         """
-        
+
         send_mail(
             subject,
-            message,
+            message.strip(),
             settings.EMAIL_HOST_USER,
-            [claim.employee.email],
+            [employee.email],
             fail_silently=False
         )
-        
+
         messages.success(request, f"Bonus claim {status.lower()} successfully.")
         return redirect('manage_bonus_claims')
-        
+
     return render(request, 'employees/process_bonus_claim.html', {'claim': claim})
 
 @login_required
-def withdraw_bonus(request,claim_id):
+def withdraw_bonus(request, claim_id):
     try:
-        claim = get_object_or_404(BonusClaim,id=claim_id)
+        claim = get_object_or_404(BonusClaim, id=claim_id)
 
-        #Verify claim belongs to logged in employee
+        # Verify claim belongs to logged-in employee
         if claim.employee.email != request.user.email:
-            messages.error(request,"Unauthorized access.")
+            messages.error(request, "Unauthorized access.")
             return redirect('bonus_dashboard')
-        
-        #verify claim is in approved statuss
+
+        # Verify claim is in approved status and has a transaction ID
         if claim.status != 'Approved':
-            messages.error(request,"Only approved claims can be withdrawn.")
+            messages.error(request, "Only approved claims can be withdrawn.")
             return redirect('bonus_dashboard')
-         # update claim status to paid
-        claim.status='Paid'
+
+        # Update claim status to Paid
+        claim.status = 'Paid'
         claim.processed_at = timezone.now()
         claim.save()
 
-        messages.success(request,"Bonus withdrawn successfully!")
+        messages.success(request, "Bonus withdrawn successfully!")
 
-        # sending email
-        subject="Bonus Withdrawal Confirmation"
-        message= f"""
+        # Sending email
+        subject = "Bonus Withdrawal Confirmation"
+        message = f"""
         Dear {claim.employee.first_name},
 
-        Your bonus withdrawal of Rs.{claim.amount} has been proccessed successfully.
+        Your bonus withdrawal of ₹{claim.amount} has been processed successfully.
+
 
         Best regards,
         HR Team
         """
         send_mail(
             subject,
-            message,
+            message.strip(),
             settings.EMAIL_HOST_USER,
             [claim.employee.email],
             fail_silently=False
         )
+
     except Exception as e:
-        messages.error(request,f"An error occured: {str(e)}")
-    
+        messages.error(request, f"An error occurred: {str(e)}")
+
     return redirect('bonus_dashboard')
 
+@login_required
+def mark_notifications_as_read(request, notification_id):
+    notification = get_object_or_404(Notification, id=notification_id, recipient=request.user)
+    notification.is_read = True
+    notification.save()
+
+    # Redirect employees to their dashboard, and admins to admin_dashboard
+    return redirect('admin_dashboard' if request.user.is_staff else 'dashboard')

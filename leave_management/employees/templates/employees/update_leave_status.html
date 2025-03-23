@@ -7,7 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
 <style>
     html,body{
-        background-color:rgb(94, 93, 93);
+        background-color:rgb(233, 223, 223);
     }
     .container{
         background-color:rgb(212, 236, 238);
@@ -20,11 +20,12 @@
     }
     .heading{
         font-family:"Poppins",sans-serif;
-        font-size:50px;
+        font-size:45px;
         font-weight:bold;
-        background-color:rgb(7, 7, 7);
-        padding:20px;
-        color:rgb(166, 224, 228);
+        background-color:rgb(2, 132, 128);
+        padding:10px;
+        color:rgb(238, 254, 255);
+        height:80px;
     }
 </style>
 </head>
@@ -44,12 +45,16 @@
         <textarea name="admin_reason" class="form-control" rows="4" cols="50" required></textarea><br>
     </div>
     <div class="mb-3">
-        <button class="btn btn-primary" type="submit" name="status" value="Approved">Approve</button>
-        <button class="btn btn-primary" type="submit" name="status" value="Rejected">Reject</button>
+        <button class="btn btn-success" type="submit" name="status" value="Approved">Approve</button>
+        <button class="btn btn-danger" type="submit" name="status" value="Rejected">Reject</button>
     </div>
 </form>
 </div>
+<div class="text-center">
+    <a href="/" class="btn btn-dark mt-4">Return to Dashboard</a>
+</div>
 </body>
 </html>
+
 
 

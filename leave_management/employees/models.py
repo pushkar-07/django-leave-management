@@ -20,15 +20,14 @@ class Employee(models.Model):
     # supervisor = models.ForeignKey('self',null=True,blank=True,on_delete=models.SET_NULL)
 
     def calculate_bonus(self):
-        """Convert extra leaves (above 22) into money."""
+        """Calculate bonus without modifying leave balance immediately."""
         if self.leave_balance > 22:
-            extra_leaves=self.leave_balance-22
+            extra_leaves = self.leave_balance - 22
             bonus_per_leave = Decimal('500.00')
-            self.bonus_amount += (extra_leaves * bonus_per_leave)
-            self.leave_balance=22
-            self.save()
-            return self.bonus_amount
+            return extra_leaves * bonus_per_leave  # Just return the calculated bonus, don't modify self.bonus_amount
+
         return Decimal('0.00')
+
 
     def update_annual_leaves(self):
         """Method to be called annually to process leave conversion"""
@@ -97,39 +96,44 @@ class LeaveApplication(models.Model):
     def __str__(self):
         return f"{self.employee.username or 'Unknown Employee'} - {self.leave_type} ({self.status})"
 
+
 class BonusClaim(models.Model):
-    employee = models.ForeignKey(Employee, on_delete=models.CASCADE,related_name='bonus_claim')
-    amount =models.DecimalField(max_digits=10,decimal_places=2)
-    status=models.CharField(max_length=20,choices=[('Pending','Pending'),('Approved','Approved'),('Rejected','Rejected'),('Paid','Paid')],default='Pending')
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='bonus_claim')
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(
+        max_length=20,
+        choices=[('Pending', 'Pending'), ('Approved', 'Approved'), ('Rejected', 'Rejected'), ('Paid', 'Paid')],
+        default='Pending'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
-    processed_at = models.TextField(blank=True,null=True)
-    admin_remarks = models.CharField(max_length=100,blank=True,null=True)
-    transaction_id=models.CharField(max_length=100,blank=True,null=True)
-    original_leave_balance = models.IntegerField(null=True,blank=True)
+    processed_at = models.DateTimeField(blank=True, null=True)  # Fix: Use DateTimeField instead of TextField
+    admin_remarks = models.CharField(max_length=100, blank=True, null=True)
+    original_leave_balance = models.IntegerField(null=True, blank=True)
+    original_bonus_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)  # New field
+
+    def save(self, *args, **kwargs):
+        if not self.pk:  # If this is a new bonus claim
+            self.original_leave_balance = self.employee.leave_balance
+            self.original_bonus_amount = self.employee.bonus_amount  # Store the original bonus amount
+
+        if self.pk:
+            orig = BonusClaim.objects.get(pk=self.pk)  # Get the original object before changes
+
+            # Case 1: If the bonus claim is rejected, **do not reset bonus_amount**
+            if orig.status != 'Rejected' and self.status == 'Rejected':
+                self.employee.leave_balance = self.original_leave_balance  # Restore leave balance (already correct)
+                # self.employee.bonus_amount should **not** be reset
+                self.employee.save()
+
+            # Case 2: If status changes to "Paid," reset bonus amount to 0
+            elif orig.status != 'Paid' and self.status == 'Paid':
+                self.employee.bonus_amount = Decimal('0.00')  # Only reset when claim is actually paid
+                self.employee.save()
+
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.employee.first_name} - ₹{self.amount} - {self.status}"
-    
-    def save(self, *args, **kwargs):
-        if not self.pk:
-            self.original_leave_balance = self.employee.leave_balance
-        if self.pk:
-            # Get the original object before changes
-            orig = BonusClaim.objects.get(pk=self.pk)
-            #if status changed to rejected
-            if orig.status != 'Rejected' and self.status == 'Rejected':
-                #restoring original leave balance
-                self.employee.leave_balance = self.original_leave_balance
-                self.employee.bonus_amount = Decimal('0.00')
-                self.employee.save()
-
-            # If status is changed to paid
-            elif orig.status != 'Paid' and self.status == 'Paid':
-                # Reset employee's bonus amount to 0 only after payment
-                self.employee.bonus_amount = Decimal('0.00')
-                self.employee.save()
-                
-        super().save(*args, **kwargs)
 
 class Notification(models.Model):
     recipient = models.ForeignKey(User,on_delete=models.CASCADE) # admin who receives the notificatoin

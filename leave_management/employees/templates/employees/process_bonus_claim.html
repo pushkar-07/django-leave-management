@@ -1,12 +1,63 @@
 {% extends 'homepage.html' %}
 {% block title %}Process Bonus Claims{% endblock title %}
 {% block content %}
+<style>
+    .container {
+        max-width: 600px;
+        margin: auto;
+    }
+
+    h2 {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    p{
+        color:white;
+    }
+    p>strong{
+        color:black;
+    }
+
+    .card {
+        border-radius: 10px;
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        background-color:rgb(150, 165, 144);
+    }
+
+    .card-body {
+        padding: 20px;
+    }
+
+    .mb-3 {
+        margin-bottom: 15px;
+    }
+
+    .form-select, 
+    .form-control {
+        border-radius: 8px;
+        border: 1px solid #ced4da;
+        padding: 10px;
+    }
+
+    .btn-primary {
+        width: 100%;
+        background-color:rgb(1, 19, 20);
+        border: none;
+        padding: 10px;
+        border-radius: 8px;
+    }
+
+    .btn-primary:hover {
+        background-color: #0056b3;
+    }
+</style>
+
 <div class="container mt-4">
     <h2>Process Bonus Claim</h2>
     
     <div class="card mb-4">
         <div class="card-body">
-            <h5>Claim Details</h5>
+            <h4 class="p-3 text-center">Claim Details</h4>
             <p><strong>Employee:</strong> {{ claim.employee.first_name }} {{ claim.employee.last_name }}</p>
             <p><strong>Amount:</strong> ₹{{ claim.amount }}</p>
             <p><strong>Bank Account:</strong> {{ claim.employee.bank_account_number }}</p>
@@ -24,12 +75,7 @@
                     <select name="status" class="form-select" required>
                         <option value="Approved">Approve</option>
                         <option value="Rejected">Reject</option>
-                        <option value="Paid">Mark as Paid</option>
                     </select>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Transaction ID</label>
-                    <input type="text" name="transaction_id" class="form-control">
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Remarks</label>
@@ -40,4 +86,6 @@
         </div>
     </div>
 </div>
+
+
 {% endblock %}

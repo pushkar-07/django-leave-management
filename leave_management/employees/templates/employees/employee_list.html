@@ -2,9 +2,16 @@
 {% block title %}All Employees{% endblock title %}
 {% block content %}
 
+
 <div class="header">
-    <h1>Employee List</h1>
+<div style="display: flex; justify-content: center; margin-top: 20px;">
+    <form method="GET" action="{% url 'employee_list' %}">
+        <input type="text" name="employee_name" placeholder="Search employees..." value="{{ request.GET.employee_name }}" style="padding: 5px; width: 250px; border-radius: 5px; border: 1px solid #ccc;">
+        <button type="submit" style="padding: 5px 10px; border-radius: 5px; border: 1px solid #333; background-color: #333; color: white;">Search</button>
+    </form>
 </div>
+</div>
+<div class="p-4">
 <div class="table-responsive pt-3">
     <table border="1" class="table table-striped table-bordered table-hover">
         <thead class="table-dark">
@@ -16,21 +23,26 @@
                 <th>Designation</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody>  
             {% for employee in employees%}
-            <tr>
-                <td>{{employee.first_name}}</td>
-                <td>{{employee.last_name}}</td>
-                <td>{{employee.email}}</td>
-                <td>{{employee.department}}</td>
-                <td>{{employee.designation}}</td>
-            </tr>
+                {% if employee.is_active %}
+                <tr>
+                    <td>{{employee.first_name}}</td>
+                    <td>{{employee.last_name}}</td>
+                    <td>{{employee.email}}</td>
+                    <td>{{employee.department}}</td>
+                    <td>{{employee.designation}}</td>
+                </tr>
+                {% else %}
+                {% endif %}
             {% endfor %}
 
         </tbody>
     </table>
 </div>
 
-<a href="/" class="btn btn-dark mt-4">Dashboard</a>
+
+<a href="/" class="btn btn-dark mt-4">Return to Dashboard</a>
+</div>
 
 {% endblock content %}

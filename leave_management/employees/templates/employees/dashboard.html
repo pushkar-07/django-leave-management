@@ -2,19 +2,147 @@
 {% block title %}Dashboard{% endblock title %}
 
 {% block content %}
+<style>
+    .page-header{
+        height:80px;
+    }
+    .content{
+        margin-top:60px;
+    }
+    .welcome-section{
+        padding:20px;
+        
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .row{
+      margin-top:50px;
+    }
+</style>
 
-<h2>Dashboard</h2>
-<p>Welcome, {{user.get_full_name}}</p>
+<div class="page-header fixed-top d-flex justify-content-between align-items-center px-4">
+    <h2>Employee Dashboard</h2>
+        
+        <div class="dropdown">
+          <button class="btn btn-link position-relative m-0" type="button" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="fas fa-bell text-dark fs-4"></i>
+              {% if notifications %}
+                  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                      {{ notifications|length }}
+                  </span>
+              {% endif %}
+          </button>
+          
+        <div class="dropdown-menu dropdown-menu-end p-0 notification-dropdown" aria-labelledby="notificationDropdown" style="width: 300px; max-height: 400px; overflow-y: auto;">
+              <div class="p-2 border-bottom">
+                  <h6 class="mb-0">Notifications</h6>
+              </div>
+            <div class="notification-list">
+                  {% for notification in notifications %}
+                      <div class="notification-item d-flex justify-content-between align-items-center p-3 border-bottom {% if not notification.is_read %}bg-light{% endif %}">
+                          <div class="notification-content pe-2">
+                              <p class="mb-1 small">{{notification.message}}</p>
+                              <small class="text-muted">{{notification.created_at|date:"F d, Y H:i"}}</small>
+                          </div>
+                          <a href="{% url 'mark_notifications_as_read' notification.id %}" class="text-muted text-decoration-none close-notification">
+                              <i class="fas fa-times"></i>
+                          </a>
+                      </div>
+                  {% empty %}
+                      <div class="p-3 text-center text-muted">
+                          <p class="mb-0">No new notifications</p>
+                      </div>
+                  {% endfor %}
+              </div>
+          </div>
+      </div>
+  
+  </div>
+  
+  
+  <div class="sidebar text-white bg-dark p-3">
+      <div class="sidebar-content">
+          <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">   
+            <span class="fs-4">Menu</span>
+          </a>
+          <hr>
+          <ul class="nav nav-pills flex-column mb-auto">
+            <li class="nav-item mt-2">
+              <a href="{% url 'dashboard' %} " class="nav-link active" aria-current="page">
+                Dashboard
+              </a>
+            </li>
+  
+            <li class="nav-item mt-2">
+              <a href="{% url 'apply_leave' %}" class="nav-link text-white">
+                Request Leave
+              </a>
+            </li>
+            <li class="nav-item mt-2">
+              <a href="{% url 'leave_status' %}" class="nav-link text-white">
+                My Leaves
+              </a>
+            </li>
+            <li class="nav-item mt-2">
+              <a href="{% url 'bonus_dashboard' %}" class="nav-link text-white">
+                Claim Bonus
+              </a>
+            </li>
+          </ul>
+      </div>
+          
+      <div class="user-section">
+        <hr>   
+          <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+            <strong>User</strong>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-dark text-small shadow p-3" aria-labelledby="dropdownUser1">
+            <li><a class="dropdown-item" href="{% url 'password_change'  %}">Change Password</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+              <a class="dropdown-item" href="{%url 'logout' %}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Logout</a>
+                <form id="logout-form" method="post" action="{% url 'logout' %}" style="display:none">
+                  {% csrf_token %}
+                </form>
+            </li>
+          </ul>       
+      </div>
+    </div>
 
-<ul>
-    <li><a href="{% url 'apply_leave' %}">Apply for Leave</a></li>
-    <li><a href="{% url 'leave_status' %}">Previous Leave Applications</a></li>
-    <li><a href="{% url 'password_change'%}">Change password</a></li>
-    <li><a href="{% url 'bonus_dashboard' %}">Bonus Dashboard</a></li>
-</ul>
-<hr>
-<form method="post" action="{% url 'logout' %}" style="display:inline">
-    {% csrf_token %}
-    <button type="submit">Logout</button>
-</form>
+  <div class="content">
+        <div class="welcome-section mt-4">
+            <h3>Welcome, {{user.first_name}}!</h3>
+        </div>
+    
+      <div class="container mt-1">
+        <div class="row g-4 d-flex justify-content-around">
+        <div class="col-md-4">
+          <div class="card h-100" style="background-color:rgb(106,178,178)">
+            <div class="card-body text-center">
+              <div class="bg-light p-2">
+              <h4 class="card-title " style="color:rgb(52, 55, 55);" >
+                Total Leave Requests
+              </h4>
+            </div>
+              <h2 class="text-white mb-1 mt-1">{{total_requests}}</h2>
+              <p class="card-text text-white">Total leave requests to date</p>
+              <a href="{% url 'leave_status' %}" class="btn btn-dark mt-3">View</a>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card h-100" style="background-color:rgb(106,178,178);">
+            <div class="card-body text-center">
+              <div class="bg-light p-2 mb-5 mt-0">
+              <h3 class="card-title " style="color:rgb(52, 55, 55);">
+                Leave Balance
+              </h3>
+            </div>
+              <h1 class="text-white">{{employee.leave_balance}}</h1>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>  
 {% endblock content %}

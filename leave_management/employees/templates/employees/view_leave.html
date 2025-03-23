@@ -1,15 +1,107 @@
 {% extends "homepage.html" %}
 
 {% block content %}
-<h2>Leave Application</h2>
-<p><strong>Employee:</strong>{{leave.employee.first_name}} {{leave.employee.last_name}}</p>
-<p><strong>Leave Duration:</strong>{{leave.leave_duration}}</p>
-<p><strong>Leave Type:</strong>{{leave.leave_type}}</p>
-<p><strong>Leave Date:</strong>{{leave.leave_date}}</p>
-<p><strong>Reason for Leave:</strong>{{leave.reason}}</p>
-<p><strong>Application Status:</strong>{{leave.status}}</p>
-<p><strong>Admin's reason:</strong>{{leave.admin_reason}}</p>
+<style>
+    .container{
+        max-width: 600px; 
+        margin: 0 auto; 
+        padding: 20px;
+        background:rgb(222, 255, 252); 
+        border-radius: 10px; 
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); 
+        text-align: center;
+    }
+    .header{
+        text-align:center;
+    }
+    h2{
+        color: white;
+    }
 
-<a href="{% url 'manage_leaves' %}">Back to Leave List</a>
+    .details {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid #ddd;
+    }
+    .label {
+        width: 40%;
+        font-weight: bold;
+        text-align: left;
+    }
+    .value {
+        width: 60%;
+        text-align: left;
+    }
+    .btn-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+    }
+    .btn{
+        background-color:rgb(35, 165, 165);
+        padding: 10px 20px;
+        border-radius: 5px;
+        color: white;
+        text-decoration: none;
+        transition: background 0.3s ease;
+    }
+    .btn:hover{
+        background-color:rgb(11, 11, 11);
+        color:white;
+    }
+</style>
+<div class="header">
+    <h1 class="mb-1">Leave Application</h1>
+</div>
+<div class="container mt-5">
+
+        <div class="details">
+            <div class="detail-row">
+                <span class="label">Employee:</span>
+                <span class="value">{{ leave.employee.first_name }} {{ leave.employee.last_name }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Leave Duration:</span>
+                <span class="value">{{ leave.leave_duration }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Leave Type:</span>
+                <span class="value">{{ leave.leave_type }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Leave Date:</span>
+                <span class="value">{{ leave.leave_date }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Reason for Leave:</span>
+                <span class="value">{{ leave.reason }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Application Status:</span>
+                {% if leave.status == "Rejected" %}
+                <span class="value" style="color:red"><strong>{{ leave.status }}</strong></span>
+                {% elif leave.status == "Approved" %}
+                <span class="value" style="color:green"><strong>{{ leave.status }}</strong></span>
+                {% else %}
+                <span class="value" style="color:rgb(223, 210, 27)"><strong>{{ leave.status }}</strong></span>
+                {% endif %}
+                
+            </div>
+            <div class="detail-row">
+                <span class="label">Admin's Reason:</span>
+                <span class="value">{{ leave.admin_reason }}</span>
+            </div>
+
+
+<div>
+    <a href="{% url 'manage_leaves' %}" class="btn">Back to Leave List</a>
+</div>
+</div>
 {% endblock content %}
 

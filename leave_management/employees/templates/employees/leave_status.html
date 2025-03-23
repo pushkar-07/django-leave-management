@@ -1,30 +1,46 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leave Status</title>
-</head>
-<body>
+{% extends "homepage.html" %}
+{% block title %}Leave Status{% endblock title %}
+{% block content %}
+
+<style>
+    .main{
+        background-color:white;
+    }
+</style>
+<div class="header">
     <h2>Your Leave Applications</h2>
-    <table border="1">
-        <tr>
-            <th>Leave Type</th>
-            <th>Leave Date</th>
-            <th>Status</th>
-            <th>Reason</th>
-        </tr>
-        {% for leave in leave_applications %}
+</div>
+<div class="main p-4">
+<div class="table-responsive pt-3">
+    <table border="1" class="table table-striped table-bordered table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Leave Type</th>
+                <th>Duration</th>
+                <th>Leave Date</th>
+                <th>Status</th>
+                <th>Reason</th>
+                <th>Admin Reason</th>
+            </tr>
+        </thead>
+        <tbody>  
+            {% for leave in leave_applications %}
         <tr>
             <td>{{ leave.leave_type}}</td>
+            <td>{{ leave.leave_duration}}</td>
             <td>{{ leave.leave_date}}</td>
-            <td>{{ leave.status}}</td>
+            <td><strong>{{ leave.status}}</strong></td>
             <td>{{ leave.reason}}</td>
+            <td>{{ leave.admin_reason}}</td>
         </tr>
         {% endfor %}
 
+        </tbody>
     </table>
+</div>
 
-    <a href="{% url 'dashboard' %}">Return to dashboard</a>
-</body>
-</html>
+
+<a href="/" class="btn btn-dark mt-4">Return to Dashboard</a>
+</div>
+
+{% endblock content %}

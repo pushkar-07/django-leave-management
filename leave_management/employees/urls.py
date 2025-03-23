@@ -1,7 +1,7 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
 from . import views # importing views from the same app
-from .views import AdminLoginView,EmployeeLoginView
+from .views import AdminLoginView,EmployeeLoginView,calculate_bonus
 from django.views.decorators.cache import cache_control
 from .forms import CustomPasswordResetForm
 
@@ -27,12 +27,13 @@ urlpatterns = [
     path('claim-bonus/',views.claim_bonus,name='claim_bonus'),
     path('bonus-dashboard/',views.bonus_dashboard,name='bonus_dashboard'),
     path('update-bank-details/',views.update_bank_details,name='update_bank_details'),
-    path('calculate-all-bonuses/',views.calculate_all_bonuses,name='calculate_all_bonuses'),
+    path('calculate-bonus/',calculate_bonus,name='calculate_bonus'),
     path('manage-bonus-claims/',views.manage_bonus_claims,name='manage_bonus_claims'),
     path('process-bonus-claim/<int:claim_id>/',views.process_bonus_claim,name='process_bonus_claim'),
     path('withdraw-bonus/<int:claim_id>/',views.withdraw_bonus,name='withdraw_bonus'),
     path('mark-notification/<int:notification_id>/',views.mark_notifications_as_read,name='mark_notifications_as_read'),
+    path('reset_password/', auth_views.PasswordResetView.as_view(template_name='employees/password_reset.html'), name='reset_password'),
+    path('reset_password_sent/', auth_views.PasswordResetDoneView.as_view(template_name='employees/password_reset_sent.html'), name='password_reset_done'),
+    path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(template_name='employees/password_reset_confirm.html'), name='password_reset_confirm'),
+    path('reset_password_complete/', auth_views.PasswordResetCompleteView.as_view(template_name='employees/password_reset_complete.html'), name='password_reset_complete'),
 ]
-
-
-    
