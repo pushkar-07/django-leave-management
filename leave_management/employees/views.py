@@ -386,13 +386,13 @@ def process_bonus_claim(request, claim_id):
         claim.processed_at = timezone.now()
         claim.save()
 
-        # ✅ Reset leave balance & bonus amount only when approved
+        #  Reset leave balance & bonus amount only when approved
         if status == 'Approved':
             employee.leave_balance = 22  # Reset to threshold value
             # employee.bonus_amount = Decimal('0.00')  # Reset bonus amount
             employee.save()
 
-        # ✅ When rejected, do nothing (leave balance & bonus remain unchanged)
+        #When rejected, do nothing (leave balance & bonus remain unchanged)
         
         # Notify the employee
         user = User.objects.filter(email=employee.email).first()

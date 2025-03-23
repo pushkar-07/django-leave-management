@@ -35,7 +35,7 @@ class Employee(models.Model):
 
 class LeaveApplication(models.Model):
     LEAVE_TYPES = [
-        ('Sick','Sick Leave'), # idhar (db_value,display_value)
+        ('Sick','Sick Leave'), # here (db_value,display_value)
         ('Casual','Casual Leave'),
         ('Other','Other'),
     ]
